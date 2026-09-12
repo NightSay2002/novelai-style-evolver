@@ -1,0 +1,7067 @@
+{
+  "version": 3,
+  "targetCount": 1000,
+  "source": "Danbooru public tags API + curated style vocabulary",
+  "minimumPostCount": 20,
+  "metadataPolicy": "rendering-curated",
+  "categories": {
+    "quality": {
+      "label": "品質",
+      "max": 3
+    },
+    "aesthetic": {
+      "label": "美感",
+      "max": 3
+    },
+    "year": {
+      "label": "年代",
+      "max": 2
+    },
+    "complexity": {
+      "label": "複雜度",
+      "max": 2
+    },
+    "medium": {
+      "label": "媒材",
+      "max": 2
+    },
+    "visual_novel": {
+      "label": "Visual Novel",
+      "max": 1
+    },
+    "v5_other": {
+      "label": "V5 其他",
+      "max": 2
+    },
+    "custom": {
+      "label": "其他風格",
+      "max": 4
+    },
+    "negative": {
+      "label": "負向控制",
+      "max": 3
+    },
+    "coloring": {
+      "label": "上色與色盤",
+      "max": 3
+    },
+    "lighting": {
+      "label": "光線",
+      "max": 3
+    },
+    "linework": {
+      "label": "線稿",
+      "max": 3
+    },
+    "texture": {
+      "label": "紋理",
+      "max": 2
+    },
+    "rendering": {
+      "label": "渲染",
+      "max": 3
+    }
+  },
+  "tags": [
+    {
+      "tag": "aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "artistic aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "atmospheric aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "beautiful aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cinematic aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cohesive aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dreamy aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "editorial aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "elegant aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ethereal aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "masterpiece",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "moody aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "nostalgic aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pleasing aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "stylized aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "top aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "very aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "whimsical aesthetic",
+      "category": "aesthetic",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "acid colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "analogous colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "anime coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 56625
+    },
+    {
+      "tag": "bold anime coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold colored pencil",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold cool palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold duotone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold flat coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold gradient coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold halftone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold limited palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold manga coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold monochrome",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold muted palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold neon palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold pastel palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold sepia tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold watercolor",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bright colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bright palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "candy color palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "candy colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cel coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "changing colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 48
+    },
+    {
+      "tag": "cinematic color grading",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "color bleed",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "color blocking",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "color harmony",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "colored light",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "colored lineart",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "colored pencil",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 612
+    },
+    {
+      "tag": "colored shadow",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 4073
+    },
+    {
+      "tag": "colored sketch",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "colorful",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "complementary colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 1745
+    },
+    {
+      "tag": "cool colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 1602
+    },
+    {
+      "tag": "cool palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cool tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dark colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dark palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate anime coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate colored pencil",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate cool palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate duotone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate flat coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate gradient coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate halftone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate limited palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate manga coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate monochrome",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate muted palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate neon palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate pastel palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate sepia tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate watercolor",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "desaturated colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "duotone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dusty colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "earth tone palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "earth tones",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive anime coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive colored pencil",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive flat coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive gradient coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive manga coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive watercolor",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "faded colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "film color grading",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "flat color",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "flat coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fluorescent colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gradient coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gradient colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "greyscale",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "halftone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "halftone shadow",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 24
+    },
+    {
+      "tag": "halftone texture",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard anime coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard colored pencil",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard cool palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard duotone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard flat coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard gradient coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard halftone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard limited palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard manga coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard monochrome",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard muted palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard neon palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard pastel palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard sepia tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard watercolor",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "high key colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "inverted colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 473
+    },
+    {
+      "tag": "iridescent colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "jewel tone palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "jewel tones",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "limited palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 26449
+    },
+    {
+      "tag": "loose anime coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose colored pencil",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose cool palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose duotone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose flat coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose gradient coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose halftone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose limited palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose manga coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose monochrome",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose muted palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose neon palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose pastel palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose sepia tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose watercolor",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "low key colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "manga coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "metallic colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "monochrome",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "monochrome lineart",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "monochrome sketch",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "multicolored",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "multiple theme colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 501
+    },
+    {
+      "tag": "muted colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 9189
+    },
+    {
+      "tag": "muted palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "neapolitan palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 158
+    },
+    {
+      "tag": "neon colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "neon palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 1107
+    },
+    {
+      "tag": "neutral colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "paint palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 3319
+    },
+    {
+      "tag": "pale colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 3892
+    },
+    {
+      "tag": "pastel colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 4771
+    },
+    {
+      "tag": "pastel palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "primary colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "restricted palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rough coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "saturated colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "screentone texture",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "screentones",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "secondary colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sepia tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft anime coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft colored pencil",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft cool palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft duotone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft flat coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft gradient coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft halftone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft limited palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft manga coloring",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft monochrome",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft muted palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft neon palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft pastel palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft sepia tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft watercolor",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "split complementary colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "spot color",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "stone texture",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "teal and orange color grading",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "tertiary colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "triadic colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 42
+    },
+    {
+      "tag": "tritone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "two-tone colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "vibrant colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "vibrant palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "vintage colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "warm colors",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "warm palette",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "warm tone",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "watercolor effect",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 1004
+    },
+    {
+      "tag": "watercolor painting",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "watercolor paper",
+      "category": "coloring",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "high complexity",
+      "category": "complexity",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "low complexity",
+      "category": "complexity",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "medium complexity",
+      "category": "complexity",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "ultra complexity",
+      "category": "complexity",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "1920s art deco",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "1930s illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "1940s poster art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "1950s retro art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "1960s pop art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "1970s retro art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "1980s anime style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "1990s anime style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "2000s anime style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "abstract art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "alcohol marker",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "alternate art style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 98
+    },
+    {
+      "tag": "ambient occlusion",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "anime art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "art deco",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "art nouveau",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ascii art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "balanced design",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ballpoint pen",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "baroque art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bauhaus design",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ben-day dots",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "black and white",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "blue hour",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bokeh",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold anime art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold art deco",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold art nouveau",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold bokeh",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold chiaroscuro",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold chibi art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold concept art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold cubism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold cyberpunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold dark fantasy",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold editorial illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold expressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold fantasy art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold fine art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold gothic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold graphite",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold hard shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold impressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold marker",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold minimalism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold oil paint",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold paint splatter",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold pop art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold poster art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold soft shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold steampunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold surrealism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold synthwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold ukiyo-e",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold vaporwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "botanical illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "brutalist design",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ceramic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "chiaroscuro",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "chibi",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "chibi art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "children's book illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cinematic shot",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "classic anime style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "clay art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "clean finish",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "collage art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "concept art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "concept art style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "constructivist art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "contemporary illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "copics",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cover art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cover illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "crisp details",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cubist art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cyanotype",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cyberpunk art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dark fantasy art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate anime art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate art deco",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate art nouveau",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate bokeh",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate chiaroscuro",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate chibi art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate concept art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate cubism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate cyberpunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate dark fantasy",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate editorial illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate expressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate fantasy art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate fine art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate gothic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate graphite",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate hard shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate impressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate marker",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate minimalism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate oil paint",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate paint splatter",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate pop art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate poster art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate soft shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate steampunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate surrealism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate synthwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate ukiyo-e",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate vaporwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "depth blur",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "detail background",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "digital art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "digital illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "digital noise",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "doodle art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dotwork",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dramatic shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dry-on-dry",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dunhuang style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 179
+    },
+    {
+      "tag": "early digital art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "editorial art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "editorial illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "embroidery art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "encaustic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "engraving",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "etching",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "experimental art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressionist art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive design",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive graphite",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive hard shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive marker",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive oil paint",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive soft shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fabric art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fairy tale art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fantasy art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fashion editorial style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fashion illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "faux retro artstyle",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 4128
+    },
+    {
+      "tag": "ff gradient",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 55
+    },
+    {
+      "tag": "fine art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fine art illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fine art style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fine details",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "flat shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "folk art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "folk art style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "froggy style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 39
+    },
+    {
+      "tag": "gallery art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "game cg style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "generative art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gesture drawing",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "glitch art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "global illumination",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "golden hour",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gothic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "graffiti art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "graphic novel art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "graphic novel style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "graphite drawing",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard anime art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard art deco",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard art nouveau",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard bokeh",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard chiaroscuro",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard chibi art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard concept art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard cubism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard cyberpunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard dark fantasy",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard editorial illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard expressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard fantasy art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard fine art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard gothic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard graphite",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard hard shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard impressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard marker",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard minimalism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard oil paint",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard paint splatter",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard pop art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard poster art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard soft shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard steampunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard surrealism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard synthwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard ukiyo-e",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard vaporwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "heisei retro",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 1468
+    },
+    {
+      "tag": "high contrast",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "highly detailed",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hyperrealistic",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "illustrative realism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "impressionist art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "indian style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 21162
+    },
+    {
+      "tag": "intricate details",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "isometric illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "jungle style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 61
+    },
+    {
+      "tag": "key visual art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "late digital art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "limited animation style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "linocut",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "lithograph",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose anime art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose art deco",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose art nouveau",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose bokeh",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose chiaroscuro",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose chibi art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose concept art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose cubism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose cyberpunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose dark fantasy",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose editorial illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose expressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose fantasy art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose fine art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose gothic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose graphite",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose hard shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose impressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose marker",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose minimalism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose oil paint",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose paint splatter",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose pop art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose poster art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose soft shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose steampunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose surrealism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose synthwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose ukiyo-e",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose vaporwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "low contrast",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "low poly art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "maximalist art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "memphis design",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "minimalist art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "mixed media",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "modern anime style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "modern illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "monotype",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "mosaic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "motion blur",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "movie tonal",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "naive art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "naive art style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "needle felting",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "night vision effect",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 331
+    },
+    {
+      "tag": "outsider art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "paint splatter",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "paint wash effect",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "photorealistic",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "picture book style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "polished illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pop art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "poster art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "poster illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "production art style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "professional illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rainbow gradient",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 2882
+    },
+    {
+      "tag": "realistic shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "refined artwork",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "refined design",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "retro artstyle",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 24606
+    },
+    {
+      "tag": "risograph print",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rococo art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "romanticism art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sci fi art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "scientific illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "screen print",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sculptural art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "semi realistic",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "silhouette",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "smooth shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft anime art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft art deco",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft art nouveau",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft bokeh",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft chiaroscuro",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft chibi art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft concept art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft cubism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft cyberpunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft dark fantasy",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft editorial illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft expressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft fantasy art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft fine art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft gothic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft graphite",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft hard shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft impressionism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft marker",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft minimalism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft oil paint",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft paint splatter",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft pop art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft poster art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft soft shading",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft steampunk",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft surrealism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft synthwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft ukiyo-e",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft vaporwave",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "splash art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "stained glass art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "steampunk art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "stippling",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "storybook art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "storybook illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "storybook style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "street art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "stylized realism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "subtle noise",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sumi-e",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "surrealist art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "svg art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "symbolist art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "synthwave art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "technical pen",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "tenebrism",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "textile art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "typographic art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ukiyo-e",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ultra detailed",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ultra high detail",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "uniform line weight",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "vaporwave art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "variable line weight",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "vintage illustration",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "visual harmony",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "visual poetry",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "voxel art",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "wet-on-wet",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "woodblock print",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "woodblock style",
+      "category": "custom",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "afterglow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ambient lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "anamorphic flare",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "atmospheric lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "backlighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bioluminescent lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold backlighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold candlelight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold cinematic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold dramatic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold lens flare",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold light bloom",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold moonlight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold neon lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold rim lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold soft lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold volumetric lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bottom lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bounce light",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "butterfly lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "candlelight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cast shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cinematic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "complex lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 45
+    },
+    {
+      "tag": "crayon drawing",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "crayon texture",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dappled sunlight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate backlighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate candlelight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate cinematic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate dramatic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate lens flare",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate light bloom",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate moonlight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate neon lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate rim lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate soft lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate volumetric lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "different shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 1453
+    },
+    {
+      "tag": "diffuse lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dim lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 1337
+    },
+    {
+      "tag": "dramatic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dream glow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "drop shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 17121
+    },
+    {
+      "tag": "film glow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "firelight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "flow glow (hololive)",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 81
+    },
+    {
+      "tag": "fluorescent lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fog lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gallery lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "glow effect",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "god rays",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gradient shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 54
+    },
+    {
+      "tag": "grayscale",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "grow glorious glow (project sekai)",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 29
+    },
+    {
+      "tag": "hard backlighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard candlelight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard cinematic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard dramatic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard lens flare",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard light bloom",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard moonlight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard neon lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard rim lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard soft lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard volumetric lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "haze lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "high key lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "incandescent lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "inner glow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "lens flare",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "light bloom",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "light rays",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "light shafts",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "living shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 161
+    },
+    {
+      "tag": "long shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 119
+    },
+    {
+      "tag": "loose backlighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose candlelight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose cinematic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose dramatic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose lens flare",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose light bloom",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose moonlight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose neon lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose rim lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose soft lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose volumetric lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "low key lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "moonlight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "neon lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "no shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 28
+    },
+    {
+      "tag": "ominous shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 250
+    },
+    {
+      "tag": "outer glow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 778
+    },
+    {
+      "tag": "overcast lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "polka dot shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 67
+    },
+    {
+      "tag": "portrait lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pov shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 609
+    },
+    {
+      "tag": "reflected light",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rembrandt lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rim lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sidelighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sitting in shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 37
+    },
+    {
+      "tag": "soft backlighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft candlelight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft cinematic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft dramatic lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft lens flare",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft light bloom",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft moonlight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft neon lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft rim lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft soft lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft volumetric lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "split lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "stage lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "studio lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sunlight",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "top lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "underlighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "volumetric lighting",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "window light",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "window shadow",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 4185
+    },
+    {
+      "tag": "x-ray film",
+      "category": "lighting",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 286
+    },
+    {
+      "tag": "airbrush",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold brush pen",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold crosshatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold ink splatter",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold ink wash",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold stipple shading",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "broken lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "broken pencil",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 34
+    },
+    {
+      "tag": "brush lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "brush pen",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "brush texture",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "calligraphic lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "calligraphy brush",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "clean lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "concept sketch",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "contour lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cross hatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "crosshatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate brush pen",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate crosshatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate ink splatter",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate ink wash",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate stipple shading",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "design sketch",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dry brush",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dry brush texture",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive brush pen",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive ink wash",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fine hatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gestural lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard brush pen",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard crosshatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard ink splatter",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard ink wash",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard stipple shading",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "impasto brushwork",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ink lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ink painting",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ink splatter",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ink texture",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ink wash effect",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ink wash painting",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 796
+    },
+    {
+      "tag": "ink wash style",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose brush pen",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose crosshatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose ink splatter",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose ink wash",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose stipple shading",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "mechanical pencil",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 2793
+    },
+    {
+      "tag": "mechanical pencil lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "no lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "painterly brushwork",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "painterly sketch",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "parallel hatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pen and ink",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pen lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pencil lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pencil texture",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "precise lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "quick sketch",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rough hatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rough lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rough sketch",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sketch",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "sketch lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft brush pen",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft crosshatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft ink splatter",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft ink wash",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft stipple shading",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "stipple shading",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "technical lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "thick lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "thin lineart",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "visible brushwork",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "wet brush",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "woven hatching",
+      "category": "linework",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 150
+    },
+    {
+      "tag": "3d (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "acrylic painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "animated (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "bold acrylic paint",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold charcoal",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold gouache",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold pastel",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "casein painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "chalk pastel",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "charcoal drawing",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "copics (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "delicate acrylic paint",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate charcoal",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate gouache",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate pastel",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "digital painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "encaustic painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive acrylic paint",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive charcoal",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive gouache",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive pastel",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fresco painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gouache painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "graphite (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "greek painting style",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 127
+    },
+    {
+      "tag": "hard acrylic paint",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard charcoal",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard gouache",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard pastel",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "ink (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "loose acrylic paint",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose charcoal",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose gouache",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose pastel",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "matte painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "oil painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "oil pastel",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pastel drawing",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pen (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "soft acrylic paint",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft charcoal",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft gouache",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft pastel",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "spot color (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "tempera painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "traditional painting",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "watercolor (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "watercolor pencil (medium)",
+      "category": "medium",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "artist collaboration",
+      "category": "negative",
+      "polarity": "negative",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "bad quality",
+      "category": "negative",
+      "polarity": "negative",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "displeasing",
+      "category": "negative",
+      "polarity": "negative",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "multiple views",
+      "category": "negative",
+      "polarity": "negative",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "simple illustration",
+      "category": "negative",
+      "polarity": "negative",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "very displeasing",
+      "category": "negative",
+      "polarity": "negative",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "worst quality",
+      "category": "negative",
+      "polarity": "negative",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "absurdres",
+      "category": "quality",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "amazing quality",
+      "category": "quality",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "best quality",
+      "category": "quality",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "great quality",
+      "category": "quality",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "high quality render",
+      "category": "quality",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "normal quality",
+      "category": "quality",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "production quality",
+      "category": "quality",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "3d art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "3d rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "animation cel style",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold cel rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold cel shading",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold painterly rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold pixel art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold realistic rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold toon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold vector art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold webtoon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cartoon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cel rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 555
+    },
+    {
+      "tag": "cel shading",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cell shading",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate cel rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate cel shading",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate painterly rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate pixel art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate realistic rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate toon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate vector art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate webtoon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive cel rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive cel shading",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive painterly rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive pixel art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive realistic rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "expressive vector art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hand painted rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard cel rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard cel shading",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard painterly rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard pixel art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard realistic rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard toon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard vector art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard webtoon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose cel rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose cel shading",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose painterly rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose pixel art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose realistic rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose toon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose vector art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose webtoon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "marker rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "painterly rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "physically based rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pixel art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "realistic rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft cel rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft cel shading",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft painterly rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft pixel art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft realistic rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft toon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft vector art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft webtoon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "stylized rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "toon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "toon rendering",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "vector art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "webtoon art",
+      "category": "rendering",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "analog grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold dithering",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold film grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "canvas grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "canvas texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "chalk texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "charcoal texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "cut paper illustration",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate dithering",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate film grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "distressed texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dither texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dithering",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "dry paint texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fabric texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "film grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "fine film grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "glass texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "glossy texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "grain texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "gritty texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard dithering",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard film grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "heavy film grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 464
+    },
+    {
+      "tag": "iridescent texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "linen texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose dithering",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose film grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "matte texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "metallic texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "newsprint texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "paint texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "paper craft",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "paper cutout",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "paper grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "paper texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "parchment texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pastel texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "photocopy texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "pixel texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "print texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rice paper texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "risograph texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rough paper texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "rough texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "scanline texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "screenprint texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "smooth paper texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "smooth texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft dithering",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft film grain",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "weathered texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "wet paint texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "wood texture",
+      "category": "texture",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "depthness",
+      "category": "v5_other",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "meta:golden era",
+      "category": "v5_other",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "meta:novel era",
+      "category": "v5_other",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "bold comic art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold manga art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold manhwa art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bold western comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "bronze age comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "comic art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "comic book style",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate comic art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate manga art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate manhwa art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "delicate western comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "golden age comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard comic art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard manga art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard manhwa art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "hard western comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "horizontal comic",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 76
+    },
+    {
+      "tag": "left-to-right manga",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 2996
+    },
+    {
+      "tag": "loose comic art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose manga art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose manhwa art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "loose western comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "manga art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "manhwa art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "retro manga style",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "right-to-left comic",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 1625
+    },
+    {
+      "tag": "segmented comic",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 5804
+    },
+    {
+      "tag": "silent comic",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 28427
+    },
+    {
+      "tag": "silver age comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft comic art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft manga art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft manhwa art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "soft western comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "vertical scroll comic",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "danbooru-general-curated",
+      "postCount": 2158
+    },
+    {
+      "tag": "vintage manga style",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "visual novel art",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "visual novel bg",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "visual novel cg",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "visual novel chibi",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "visual novel sprite",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "webcomic style",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "western comics",
+      "category": "visual_novel",
+      "polarity": "positive",
+      "source": "curated-synthetic",
+      "postCount": null
+    },
+    {
+      "tag": "year 2000",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2001",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2002",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2003",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2004",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2005",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2006",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2007",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2008",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2009",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2010",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2011",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2012",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2013",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2014",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2015",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2016",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2017",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2018",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2019",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2020",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2021",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2022",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2023",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2024",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2025",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    },
+    {
+      "tag": "year 2026",
+      "category": "year",
+      "polarity": "positive",
+      "source": "nai-or-user",
+      "postCount": null
+    }
+  ]
+}

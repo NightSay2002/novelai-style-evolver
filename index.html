@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>NovelAI 畫風演化器</title>
+    <link rel="stylesheet" href="./styles.css?v=22" />
+  </head>
+  <body>
+    <svg class="icon-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/></symbol>
+      <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 5h14M12 5v14M8 19h8M5 5v3m14-3v3"/></symbol>
+      <symbol id="i-style" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L2.9 9.6l6.3-.9Z"/></symbol>
+      <symbol id="i-like" viewBox="0 0 24 24"><path d="M7 10v11H3V10Zm0 11h10a2 2 0 0 0 2-1.6l1.5-7a2 2 0 0 0-2-2.4H14l.8-4.2A2.3 2.3 0 0 0 12 3l-5 7"/></symbol>
+      <symbol id="i-dislike" viewBox="0 0 24 24"><path d="M17 14V3h4v11ZM17 3H7a2 2 0 0 0-2 1.6l-1.5 7A2 2 0 0 0 5.5 14H10l-.8 4.2A2.3 2.3 0 0 0 12 21l5-7"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M8 4v6m8 4v6"/></symbol>
+      <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6m3-3v6l4 2"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+      <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l10-2v13M9 8l10-2M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3Zm10-2a3 3 0 1 1-3-3 3 3 0 0 1 3 3Z"/></symbol>
+    </svg>
+    <div class="atmosphere" aria-hidden="true"><div class="ambient-light light-one"></div><div class="ambient-light light-two"></div></div>
+    <audio id="backgroundMusic" hidden loop preload="metadata" aria-label="背景音樂"><source src="./background-music.flac" type="audio/flac" /></audio>
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand"><span class="brand-mark"><svg><use href="#i-spark"/></svg></span><span>畫風探索 <small>NOVELAI STUDIO</small></span></div>
+        <button id="anlasButton" type="button" class="anlas-badge" aria-label="設定 Token 以查詢 Anlas 餘額" title="保存 NovelAI Token 後顯示餘額；點擊開啟設定"><span>Anlas</span><span id="anlasBalance" aria-live="polite">—</span><span id="anlasWarning" hidden aria-hidden="true">!</span></button>
+      </div>
+      <div class="header-actions"><a class="author-badge" href="https://github.com/NightSay2002" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#i-star"/></svg><span>作者：時分</span></a><div class="music-control"><button id="musicButton" type="button" class="model-button music-button" aria-pressed="false" aria-label="播放背景音樂" title="播放背景音樂"><svg><use href="#i-music"/></svg><span class="music-label">音樂</span></button><label class="music-volume" title="背景音樂音量"><span class="sr-only">背景音樂音量</span><input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.18" aria-label="背景音樂音量" /></label></div></div>
+    </header>
+    <nav class="tool-rail" aria-label="工作室工具">
+      <div class="rail-main">
+        <button type="button" class="rail-button" data-panel="content" aria-controls="controlsDrawer" aria-expanded="false" title="內容 Prompt"><svg><use href="#i-text"/></svg><span>內容</span></button>
+        <button type="button" class="rail-button" data-panel="style" aria-controls="controlsDrawer" aria-expanded="false" title="質量詞"><svg><use href="#i-style"/></svg><span>質量詞</span></button>
+        <span class="rail-divider"></span>
+        <button type="button" class="rail-button" data-drawer-library="favorites" aria-controls="libraryDrawer" aria-expanded="false" title="收藏"><svg><use href="#i-star"/></svg><span>收藏</span></button>
+        <button type="button" class="rail-button" data-drawer-library="history" aria-controls="libraryDrawer" aria-expanded="false" title="最近 50 張"><svg><use href="#i-history"/></svg><span>歷史</span></button>
+      </div>
+      <button type="button" class="rail-button" data-panel="settings" aria-controls="controlsDrawer" aria-expanded="false" title="生成設定"><svg><use href="#i-settings"/></svg><span>設定</span></button>
+    </nav>
+    <main class="tabletop">
+      <div class="batch-toolbar">
+        <div><p class="eyebrow">STYLE EXPLORATION</p><h1 id="batchTitle">第 1 批</h1></div>
+        <div class="batch-progress"><span class="progress-caption">候選畫風 <span id="progressText">0 / 5</span></span><progress id="batchProgress" max="5" value="0" aria-label="本批生成進度"></progress></div>
+      </div>
+      <section class="card-stage" aria-label="五個畫風候選">
+        <div id="candidateGrid" class="candidate-grid"></div>
+      </section>
+    </main>
+    <p id="statusText" class="status-toast" role="status" hidden></p>
+    <div class="dock-wrap"><div class="vote-bar" aria-label="批次操作">
+      <span id="selectionSummary" class="selection-summary" role="status" hidden></span>
+      <span id="generationCost" data-generation-cost role="status">費用待確認</span>
+      <span id="nextBatchCost" data-generation-cost role="status" hidden>費用待確認</span>
+      <div class="vote-actions">
+        <button id="stopButton" type="button" class="ghost" disabled hidden>停止生成</button>
+        <button id="ignoreBatchButton" type="button" class="ghost" title="忽略本批 · 五張各扣 1 分，直接抽下一批" disabled hidden>忽略本批</button>
+        <button id="dislikeAllButton" type="button" class="ghost" disabled hidden>全部不喜歡</button>
+        <button id="submitVoteButton" type="button" class="primary" aria-describedby="nextBatchCost" disabled hidden><span>提交並抽下一批</span><svg><use href="#i-arrow"/></svg></button>
+        <button id="generateButton" type="button" class="primary" aria-describedby="generationCost" disabled><svg><use href="#i-spark"/></svg><span>抽取五種畫風</span></button>
+      </div>
+    </div></div>
+    <dialog id="controlsDrawer" class="drawer side-drawer" aria-labelledby="drawerTitle">
+      <div class="drawer-heading"><div><p class="eyebrow">WORKSPACE</p><h2 id="drawerTitle">內容 Prompt</h2></div><button type="button" class="icon-button" data-close-drawer aria-label="關閉設定抽屜"><svg><use href="#i-close"/></svg></button></div>
+      <div class="drawer-body">
+        <section data-panel-body="content" class="prompt-panel" hidden>
+          <p class="section-intro">定義畫面內容，讓畫風自由演化。</p>
+          <label for="contentPrompt">內容 Prompt <span>下一批生效</span></label>
+          <textarea id="contentPrompt" rows="5" placeholder="solo, 1girl, indoors" spellcheck="false">girl,closed mouth,purplehair,straight_hair,, medium_hair, pink eyes,hair_between_eyes ,flat_chest,
+cowboy_shot</textarea>
+          <label for="negativePrompt">Negative Prompt <span>下一批生效</span></label>
+          <textarea id="negativePrompt" rows="3" placeholder="輸入不希望出現的內容" spellcheck="false">{horizontal_pupils},{slit_pupils} ,curlyhair,{{mismatched irises}},++ ,ugly,duplicate,morbid,mutilated,tranny,mutated hands,poorly drawn hands,blurry,bad anatomy,bad proportions,extra limbs,cloned face,disfigured,more than 2 nipples,missing arms,extra legs,mutated hands,fused fingers,too many fingers,unclear eyes,lowers,bad anatomy,bad hands,text,error,missing fingers,extra digit,fewer digits,cropped,worst quality,low quality,normal quality,jpeg artifacts,signature,watermark,username,blurry,bad,,logo,extra_ears,{{{mismatched_irises}}},dual_wielding,{{{simple background}}}</textarea>
+          <p class="hint">修改會自動保存；本批五張沿用同一組內容。</p>
+          <div class="section-divider"></div>
+          <label class="image2image-heading" for="image2ImageEnabled">Image2Image <span>選用 · 下一批生效</span><input id="image2ImageEnabled" type="checkbox" disabled /></label>
+          <div class="reference-image-row">
+            <img id="referencePreview" class="reference-preview" alt="Image2Image 參考圖預覽" hidden />
+            <div class="reference-image-controls">
+              <p id="referenceInfo" class="hint" aria-live="polite">尚未選擇參考圖</p>
+              <label class="reference-upload" for="referenceFile">選擇／更換圖片</label>
+              <input id="referenceFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Image2Image 參考圖片" disabled />
+              <button id="removeReferenceButton" type="button" class="ghost" hidden>移除參考圖</button>
+            </div>
+          </div>
+          <div class="reference-settings">
+            <div><label for="imageStrength">Strength <output id="imageStrengthValue" for="imageStrength">0.70</output></label><input id="imageStrength" type="range" min="0" max="1" step="0.01" value="0.7" disabled /><p class="hint">越高，越偏向重新生成。</p></div>
+            <div><label for="imageNoise">Noise <output id="imageNoiseValue" for="imageNoise">0.00</output></label><input id="imageNoise" type="range" min="0" max="1" step="0.01" value="0" disabled /><p class="hint">加入參考圖的雜訊。</p></div>
+          </div>
+          <p class="hint">PNG／JPEG／WebP，最大 20 MB。上傳後按圖片尺寸同步生成寬高（最接近的 64 倍數；最長邊最多 2048），仍可手動更改。預覽與生成等比例置中補白邊，不拉伸或裁切。參考圖與設定保存在本機，重開不會再覆蓋手動尺寸；本批五張及重試不變。</p>
+          <div id="vibePanel" class="reference-tool" hidden></div>
+          <div id="precisePanel" class="reference-tool" hidden></div>
+        </section>
+        <section data-panel-body="style" hidden>
+          <label for="seedStylePrompt" class="field-label">質量詞</label>
+          <textarea id="seedStylePrompt" rows="10" spellcheck="false">-2::artist collaboration::,
+year 2025, year 2026,
+top aesthetic, best quality, aesthetic, absurdres,
+movie tonal, cinematic shot, high complexity,
+-1::multiple views::, -1::simple illustration::,
+{{{detail background}}},
+ultra complexity, visual novel cg</textarea>
+          <button id="applySeedButton" type="button" class="secondary full">套用</button>
+          <p class="hint">只抽取畫師及畫師權重，質量詞固定、不隨機。修改從下一批生效，本批及重試不變。套用會重設父畫師與目前批次，保留分數和收藏。可留空。</p>
+          <div id="styleDatabase" hidden>
+          <div class="section-divider"></div>
+          <h3>風格詞資料庫</h3>
+          <input id="styleSearch" type="search" aria-label="搜尋風格詞" placeholder="搜尋風格詞…" />
+          <select id="styleLayerFilter" aria-label="風格詞分類"><option value="">全部分類</option><option value="medium">介質感</option><option value="shading">光影結構</option><option value="color">色彩簽名</option><option value="auxiliary">附加控制</option></select>
+          <div class="pool-legend"><span>啟用 / 風格詞</span><span>方向 / 固定</span></div>
+          <div id="stylePoolList" class="style-pool-list"></div>
+          <p class="hint">舊詞庫與設定保留作相容用途，不再參與生成抽取。</p>
+          </div>
+        </section>
+        <section data-panel-body="settings" hidden>
+          <div class="section-heading"><h3>NovelAI Token</h3><span id="tokenStatus" class="token-status">未設定</span></div>
+          <input id="tokenInput" type="password" aria-label="NovelAI Token" autocomplete="off" spellcheck="false" placeholder="Persistent API Token" />
+          <div class="inline-actions"><label><input id="rememberToken" type="checkbox" /> 記住 Token</label><button id="saveTokenButton" type="button" class="secondary">保存</button><button id="clearTokenButton" type="button" class="ghost">清除</button></div>
+          <div class="section-divider"></div>
+          <h3>生成設定 <span class="muted">下一批生效</span></h3>
+          <div class="generation-settings">
+            <label class="wide" for="generationModel">模型<select id="generationModel"></select></label>
+            <label for="generationWidth">寬<input id="generationWidth" type="number" min="64" max="2048" step="64" value="832" /></label>
+            <label for="generationHeight">高<input id="generationHeight" type="number" min="64" max="2048" step="64" value="1216" /></label>
+            <label class="wide" for="generationSeed">Seed<input id="generationSeed" type="number" min="0" max="4294967295" step="1" value="114514" /></label>
+            <label class="wide" for="generationSampler">Sampler<select id="generationSampler"><option value="k_euler_ancestral">Euler Ancestral</option><option value="k_euler">Euler</option><option value="k_dpmpp_2m">DPM++ 2M</option><option value="k_dpmpp_2s_ancestral">DPM++ 2S Ancestral</option><option value="k_dpmpp_sde">DPM++ SDE</option></select></label>
+            <label for="generationSteps">Steps<input id="generationSteps" type="number" min="1" max="50" step="1" value="28" /></label>
+            <label for="generationGuidance">Guidance<input id="generationGuidance" type="number" min="0" max="20" step="0.01" value="5.5" /></label>
+            <label class="wide" for="generationCfgRescale">CFG Rescale<input id="generationCfgRescale" type="number" min="0" max="1" step="0.01" value="0.2" /></label>
+            <label class="wide" for="generationNoiseSchedule" data-capability="variety" hidden>Noise Schedule<select id="generationNoiseSchedule"></select></label>
+            <label class="setting-toggle" data-capability="variety" hidden><input id="generationVarietyPlus" type="checkbox" /> Variety+</label>
+            <label class="setting-toggle" data-capability="decrisp" hidden><input id="generationDecrisp" type="checkbox" /> Decrisp</label>
+            <label class="setting-toggle" data-capability="smea" hidden><input id="generationSmea" type="checkbox" /> SMEA</label>
+            <label class="setting-toggle" data-capability="smea" hidden><input id="generationSmeaDyn" type="checkbox" /> SMEA DYN</label>
+            <label class="setting-toggle" data-capability="smea" hidden><input id="generationAutoSmea" type="checkbox" /> Auto SMEA</label>
+            <label class="setting-toggle" data-capability="legacyUc" hidden><input id="generationLegacyUc" type="checkbox" /> Legacy UC</label>
+          </div>
+          <p id="modelSettingsHint" class="hint" hidden></p>
+          <p id="generationSettingsStatus" class="hint" role="status">自動保存，下一批生效；本批與重試不變。</p>
+          <p class="hint">寬高須為 64 的倍數。調高尺寸或 Steps 可能消耗 Anlas，實際限制與計費以 NAI 為準。</p>
+          <div class="section-divider"></div>
+          <label class="motion-setting"><span>減少動態效果<small>停止背景流動與卡片動畫</small></span><input id="reduceMotion" type="checkbox" /></label>
+          <div class="section-divider"></div>
+          <button id="resetButton" type="button" class="danger ghost full">重新開始探索</button><p class="hint">清除演化進度與未收藏歷史，保留內容、參考圖、收藏與 Token。</p>
+        </section>
+      </div>
+      <div class="drawer-footer"><span>設定保存在目前瀏覽器</span><button type="button" class="secondary" data-close-drawer>回到卡桌 <svg><use href="#i-arrow"/></svg></button></div>
+    </dialog>
+    <dialog id="libraryDrawer" class="drawer library-drawer" aria-labelledby="libraryTitle">
+      <div class="drawer-heading"><div><p class="eyebrow">YOUR COLLECTION</p><h2 id="libraryTitle">畫風紀錄</h2></div><button type="button" class="icon-button" data-close-drawer aria-label="關閉歷史抽屜"><svg><use href="#i-close"/></svg></button></div>
+      <div class="library-tabs" role="tablist" aria-label="圖片紀錄"><button type="button" role="tab" aria-selected="true" aria-controls="libraryGrid" class="tab active" data-library="history">最近 50 張</button><button type="button" role="tab" aria-selected="false" aria-controls="libraryGrid" class="tab" data-library="favorites">收藏 0 / 50</button></div>
+      <div id="libraryGrid" class="library-grid" role="tabpanel" aria-label="圖片紀錄"></div>
+    </dialog>
+    <dialog id="imageDialog" class="image-dialog" aria-label="圖片與完整 Prompt">
+      <button id="closeDialogButton" type="button" class="icon-button dialog-close" aria-label="關閉圖片預覽"><svg><use href="#i-close"/></svg></button>
+      <p id="previewPosition" class="preview-position" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+      <div class="preview-image-shell">
+        <img id="dialogImage" alt="生成圖片預覽" />
+        <button id="previewPrevious" type="button" class="icon-button preview-navigation preview-previous" aria-label="上一張" title="上一張（←）" aria-controls="dialogImage dialogPrompt" hidden disabled><svg><use href="#i-arrow"/></svg></button>
+        <button id="previewNext" type="button" class="icon-button preview-navigation preview-next" aria-label="下一張" title="下一張（→）" aria-controls="dialogImage dialogPrompt" hidden disabled><svg><use href="#i-arrow"/></svg></button>
+      </div>
+      <div class="preview-actions"><button id="previewFavorite" type="button" class="favorite-button secondary" aria-label="收藏目前圖片" aria-pressed="false" hidden disabled><svg><use href="#i-star"/></svg><span>收藏</span></button></div>
+      <details class="preview-details"><summary>完整 Prompt 與 Negative Prompt</summary><pre id="dialogPrompt"></pre></details>
+    </dialog>
+    <script type="module" src="./app.js?v=26"></script>
+  </body>
+</html>

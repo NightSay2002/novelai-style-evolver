@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI smoke test · no API calls</title>
+<style>
+  body { margin: 0; background: #17171d; color: #e9e5f3; font: 13px system-ui; }
+  header { padding: 12px 18px; } button { margin-left: 12px; padding: 7px 12px; }
+  #results { margin: 0 18px 14px; max-height: 220px; overflow: auto; line-height: 1.8; white-space: pre-wrap; }
+  iframe { width: 100%; height: 800px; border: 0; background: #101114; }
+</style>
+<header>隔離 UI 測試：記憶體資料、獨立測試資料庫、不呼叫 NovelAI。<button id="run" disabled>執行測試</button></header>
+<pre id="results">準備中…</pre>
+<iframe title="隔離測試畫面"></iframe>
+<script type="module">
+  const frame = document.querySelector('iframe');
+  const results = document.querySelector('#results');
+  const root = new URL('../', location.href).href;
+  const { parseStylePrompt } = await import(new URL('src/evolution.js', root));
+  const appSource = await (await fetch(new URL('app.js', root))).text();
+  const pageSource = await (await fetch(new URL('index.html', root))).text();
+  const moduleUrl = (text) => URL.createObjectURL(new Blob([text], { type: 'text/javascript' }));
+  const memoryModule = moduleUrl(`
+    const clone = (value) => structuredClone(value);
+    export const FAVORITE_LIMIT = 50;
+    export const getState = async (key, fallback) => clone((key === 'active' ? window.uiTest.state : window.uiTest.otherStates.get(key)) ?? fallback);
+    export const setState = async (key, value) => {
+      if (window.uiTest.saveDelay) await new Promise(resolve => setTimeout(resolve, window.uiTest.saveDelay));
+      if (key === 'active') window.uiTest.state = clone(value);
+      else window.uiTest.otherStates.set(key, clone(value));
+    };
+    export const saveBatchSavePoint = async (point, active) => {
+      if (window.uiTest.failCheckpoint) throw new Error('模擬儲存點磁碟配額不足');
+      await setState('active', active);
+      window.uiTest.savepoints.set(point.id, clone(point));
+      prune();
+    };
+    export const getSavePoint = async id => clone(window.uiTest.savepoints.get(id) ?? null);
+    export const restoreExplorationState = async (active, image, tools) => {
+      if (window.uiTest.failRestore) throw new Error('模擬儲存點還原交易失敗');
+      window.uiTest.restoreCalls = (window.uiTest.restoreCalls || 0) + 1;
+      window.uiTest.state = clone(active);
+      window.uiTest.otherStates.set('image2image', clone(image));
+      window.uiTest.otherStates.set('referenceTools', clone(tools));
+      prune();
+    };
+    const prune = () => {
+      const records = [...window.uiTest.images.values(), ...window.uiTest.favorites.values(), ...(window.uiTest.state?.currentBatch || [])];
+      const keep = new Set(records.map(item => item.savePointId));
+      for (const id of window.uiTest.savepoints.keys()) if (!keep.has(id)) window.uiTest.savepoints.delete(id);
+    };
+    export const trimImages = async () => {
+      const records = [...window.uiTest.images.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      for (const item of records.slice(50)) window.uiTest.images.delete(item.id);
+      prune();
+      return Math.max(0, records.length - 50);
+    };
+    export const getImages = async () => [...window.uiTest.images.values()].map(clone);
+    export const getImagesByBatch = async (batch) => (await getImages()).filter(x => x.batchId === batch);
+    export const saveImage = async (value) => {
+      window.uiTest.images.set(value.id, clone(value));
+      window.uiTest.generationTimings.at(-1).savedAt = performance.now();
+      await trimImages();
+    };
+    export const getFavorites = async () => [...window.uiTest.favorites.values()].map(clone);
+    export const saveFavorite = async (value) => {
+      if (!window.uiTest.favorites.has(value.id) && window.uiTest.favorites.size >= 50) throw new Error('收藏已達 50 張，請先取消其他收藏。');
+      window.uiTest.favorites.set(value.id, clone(value));
+    };
+    export const deleteFavorite = async (id) => { window.uiTest.favorites.delete(id); prune(); };
+    export const clearExplorationData = async () => { window.uiTest.state = null; window.uiTest.images.clear(); prune(); };
+  `);
+  const naiModule = moduleUrl(`
+    export { availableNoiseSchedules, availableSamplers, buildNovelAiPayload, DEFAULT_GENERATION_SETTINGS, estimateNovelAiCost, FIXED_SETTINGS, modelCapabilities, MODELS, NOISE_SCHEDULES, normalizeGenerationSettings, normalizeImageDimensions, SAMPLERS } from '${root}src/nai.js?v=10';
+    export async function fetchNovelAiAnlas({ token }) {
+      window.uiTest.balanceRequests ??= [];
+      window.uiTest.balanceRequests.push(token);
+      if (window.uiTest.deferBalance) return new Promise(resolve => { window.uiTest.resolveBalance = resolve; });
+      if (window.uiTest.balanceError) throw new Error('模擬餘額查詢失敗');
+      return window.uiTest.balance ?? { total: 166125, subscription: 10000, purchased: 156125, account: { isOpus: true, opusUsageExhausted: false } };
+    }
+    export async function encodeNovelAiVibe(settings) {
+      window.uiTest.encodings ??= [];
+      window.uiTest.encodings.push(structuredClone(settings));
+      return 'dGVzdC12aWJl';
+    }
+    export async function generateNovelAiImage({ signal, prompt, negativePrompt, image2Image, generationSettings, references }) {
+      window.uiTest.requests.push(structuredClone({ prompt, negativePrompt, image2Image, generationSettings, references }));
+      window.uiTest.generationTimings.push({ startedAt: performance.now() });
+      return new Promise((resolve, reject) => {
+        const stop = () => { window.uiTest.pending = null; reject(new Error('已停止生成。')); };
+        if (signal.aborted) return stop();
+        signal.addEventListener('abort', stop, { once: true });
+        window.uiTest.pending = (fail = false) => {
+          signal.removeEventListener('abort', stop);
+          window.uiTest.pending = null;
+          if (fail) reject(new Error('NovelAI 503: 模擬失敗'));
+          else resolve({ name: 'test.png', blob: window.uiTest.image });
+        };
+      });
+    }
+  `);
+  const patchedApp = moduleUrl(appSource.replaceAll('"./src/', '"' + root + 'src/')
+    .replace('"' + root + 'src/storage.js?v=6"', JSON.stringify(memoryModule))
+    .replace('"' + root + 'src/nai.js?v=10"', JSON.stringify(naiModule)));
+  const bootstrap = moduleUrl(`
+    const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN1cAAAAASUVORK5CYII='), c => c.charCodeAt(0));
+    window.uiTest = window.parent.uiTestSession ??= { state: null, otherStates: new Map(), savepoints: new Map(), local: new Map(), session: new Map(), images: new Map(), favorites: new Map(), requests: [], generationTimings: [], pending: null, image: new Blob([png], {type:'image/png'}), downloads: [] };
+    if (!window.uiTest.largeImageReady) {
+      const sample = document.createElement('canvas');
+      sample.width = 832; sample.height = 1216;
+      const context = sample.getContext('2d');
+      const gradient = context.createLinearGradient(0, 0, 832, 1216);
+      gradient.addColorStop(0, '#f4b8c9'); gradient.addColorStop(1, '#2d165a');
+      context.fillStyle = gradient; context.fillRect(0, 0, 832, 1216);
+      window.uiTest.image = await new Promise(resolve => sample.toBlob(resolve, 'image/png'));
+      window.uiTest.largeImageReady = true;
+    }
+    const nativeBitmap = window.createImageBitmap.bind(window);
+    window.createImageBitmap = (...args) => {
+      window.uiTest.decodeCalls = (window.uiTest.decodeCalls || 0) + 1;
+      return nativeBitmap(...args);
+    };
+    const nativeTimeout = window.setTimeout.bind(window);
+    window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, window.uiTest.fastImageDelays && callback.name === 'finish' && delay >= 500 && delay <= 1500 ? 10 : delay, ...args);
+    const memoryStorage = (data) => {
+      return { getItem: k => data.get(k) ?? null, setItem: (k,v) => data.set(k, String(v)), removeItem: k => data.delete(k) };
+    };
+    Object.defineProperty(window, 'localStorage', { value: memoryStorage(window.uiTest.local) });
+    Object.defineProperty(window, 'sessionStorage', { value: memoryStorage(window.uiTest.session) });
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = (url, options) => {
+      if (new URL(url, document.baseURI).origin !== new URL(document.baseURI).origin) throw new Error('UI test blocks external requests');
+      return nativeFetch(url, options);
+    };
+    HTMLAnchorElement.prototype.click = function () { window.uiTest.downloads.push(this.download); };
+    window.confirm = () => true;
+    sessionStorage.setItem('novelai_style_evolver_token_session', 'ui-test-not-a-real-token');
+    await import('${patchedApp}');
+  `);
+  frame.srcdoc = pageSource.replace('<head>', '<head><base href="' + root + '">')
+    .replace(/\.\/app\.js\?v=\d+/, bootstrap);
+  const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  async function until(predicate, label) {
+    const deadline = Date.now() + 8000;
+    while (!predicate()) {
+      if (Date.now() > deadline) throw new Error('Timeout: ' + label);
+      await pause(20);
+    }
+  }
+  function assert(condition, label) {
+    if (!condition) throw new Error(label);
+    results.textContent += 'PASS ' + label + '\n';
+  }
+  function elementRatio(element) {
+    const style = element.ownerDocument.defaultView.getComputedStyle(element);
+    return parseFloat(style.width) / parseFloat(style.height);
+  }
+  function cardsHaveRatio(doc, width, height) {
+    const visuals = [...doc.querySelectorAll('.card-visual')];
+    return visuals.length === 5 && visuals.every(element => Math.abs(elementRatio(element) - width / height) < 0.01);
+  }
+  await until(() => frame.contentDocument.querySelector('#generateButton')?.disabled === false, 'initialized');
+  results.textContent = '已準備，可執行。';
+  document.querySelector('#run').disabled = false;
+  document.querySelector('#run').addEventListener('click', async (event) => {
+    event.target.disabled = true;
+    results.textContent = '';
+    const win = frame.contentWindow;
+    const doc = frame.contentDocument;
+    const data = win.uiTest;
+    const $ = selector => doc.querySelector(selector);
+    const click = selector => $(selector).click();
+    const change = (selector, value) => { if (typeof value === 'boolean') $(selector).checked = value; else $(selector).value = value; $(selector).dispatchEvent(new win.Event('input', { bubbles: true })); };
+    const answer = async (fail = false) => { await until(() => data.pending, 'pending image'); data.pending(fail); };
+    try {
+      assert($('#contentPrompt').value === 'girl,closed mouth,purplehair,straight_hair,, medium_hair, pink eyes,hair_between_eyes ,flat_chest,\ncowboy_shot', '首次開啟使用作者內容模板，保留原文');
+      assert($('#negativePrompt').value.startsWith('{horizontal_pupils},{slit_pupils}') && $('#negativePrompt').value.endsWith('{{{simple background}}}'), '首次開啟使用作者 Negative Prompt');
+      assert($('.author-badge').getAttribute('href') === 'https://github.com/NightSay2002' && $('.author-badge').textContent === '作者：時分' && $('.author-badge use').getAttribute('href') === '#i-star', '作者連結與黄色星星替代本機工作室');
+      assert(win.getComputedStyle($('.author-badge svg')).animationName === 'author-star-spin' && win.getComputedStyle($('.author-badge svg')).animationIterationCount === 'infinite', '作者星星持續旋轉');
+      click('[data-panel="style"]');
+      assert($('label[for="seedStylePrompt"]').textContent === '質量詞' && $('#applySeedButton').textContent === '套用', '質量詞欄位及套用按鈕使用新名稱');
+      assert($('#styleDatabase').hidden, '關閉並隱藏風格抽取介面');
+      const fixedQuality = parseStylePrompt($('#seedStylePrompt').value);
+      click('#controlsDrawer [data-close-drawer]');
+      await until(() => !$('#anlasButton').disabled && $('#anlasBalance').textContent === '166,125', 'initial Anlas balance');
+      assert($('#anlasButton').closest('.header-left') && $('#anlasButton').title.includes('156,125'), 'Anlas 在左上角顯示真實合計與兩種餘額提示');
+      assert(!$('.header-actions [data-panel="settings"]') && !$('#modelLabel') && $('.tool-rail [data-panel="settings"]'), '移除右上角重複設定入口，左側模型及生成設定仍可使用');
+      assert($('#generationCost').textContent === '預估 0 Anlas', '已確認 Opus 與 V5 免費用量時顯示整批預估 0 Anlas');
+      assert(!$('.vote-actions [data-generation-cost]') && !$('#generationCost').hidden && $('#nextBatchCost').hidden && !$('#generateButton').textContent.includes('Anlas'), '費用與提示移到按鈕外，只顯示目前操作的預估');
+      const initialFrameWidth = frame.style.width;
+      for (const width of [1280, 1000, 800, 760, 556, 390, 320]) {
+        frame.style.width = width + 'px';
+        await pause(30);
+        const left = $('.header-left').getBoundingClientRect();
+        const right = $('.header-actions').getBoundingClientRect();
+        assert(left.right <= right.left && right.right <= doc.documentElement.clientWidth && $('#anlasButton').getBoundingClientRect().height < 40,
+          width + 'px 頁首餘額不重疊音樂與模型按鈕、不增加高度');
+        assert($('#generateButton').getBoundingClientRect().right <= doc.documentElement.clientWidth && $('#generationCost').getBoundingClientRect().right <= doc.documentElement.clientWidth,
+          width + 'px 按鈕及外部費用不溢出螢幕');
+      }
+      frame.style.width = initialFrameWidth;
+      assert(doc.querySelectorAll('.candidate').length === 5, '五張初始卡背');
+      assert(cardsHaveRatio(doc, 832, 1216), '初始直牌圖片框使用 832 × 1216 比例');
+      assert(!$('.candidate input[type="checkbox"]'), '卡片已移除小方格');
+      assert($('.candidate [data-action="favorite"] use').getAttribute('href') === '#i-star' && $('[data-drawer-library="favorites"] use').getAttribute('href') === '#i-star', '卡片與側欄收藏都使用星星');
+      assert($('.candidate [data-action="like"] use').getAttribute('href') === '#i-like', '獨立讚好按鈕使用正讚圖示');
+      assert(!$('#batchHint') && $('#statusText').hidden && $('#selectionSummary').hidden, '初始卡桌不顯示口號或資料載入數量');
+      assert($('#ignoreBatchButton').hidden && $('#ignoreBatchButton').disabled, '未生成時隱藏並停用忽略本批');
+      assert(!$('#image2ImageEnabled').checked && $('#image2ImageEnabled').disabled && $('#referencePreview').hidden, 'Image2Image 預設關閉，沒有參考圖不能啟用');
+      click('[data-panel="content"]');
+      assert($('#controlsDrawer').open && !$('[data-panel-body="content"]').hidden, '內容抽屜可開啟');
+      change('#contentPrompt', 'solo, landscape');
+      change('#negativePrompt', 'text');
+      click('[data-panel="settings"]');
+      change('#generationSteps', 29);
+      assert($('#generationCost').textContent === '預估 150 Anlas' && $('#generationCost').title.includes('5 次單張'), 'Steps 超過免費條件立即更新外部費用及提示');
+      change('#generationSteps', 28);
+      const defaults = { width: 832, height: 1216, seed: 114514, sampler: 'k_euler_ancestral', steps: 28, guidance: 5.5, cfgRescale: 0.2, model: 'nai-diffusion-5-full', noiseSchedule: 'karras', varietyPlus: false, decrisp: false, smea: false, smeaDyn: false, autoSmea: false, legacyUc: false };
+      const custom = { ...defaults, width: 1216, height: 832, seed: 20260912, sampler: 'k_euler', steps: 21, guidance: 7, cfgRescale: 0.35 };
+      const settingSelector = key => '#generation' + key[0].toUpperCase() + key.slice(1);
+      assert(Object.entries(defaults).every(([key, value]) => typeof value === 'boolean' ? $(settingSelector(key)).checked === value : $(settingSelector(key)).value === String(value)), '生成設定保留原預設值並提供可編輯欄位');
+      assert(!$('[data-panel-body="settings"]').textContent.includes('Quality Tags') && !$('[data-panel-body="settings"]').textContent.includes('預設 UC'), '設定面板不顯示自動 Quality Tags 與預設 UC');
+      for (const [key, value] of [['width', 800], ['seed', ''], ['steps', 51], ['cfgRescale', 1.01]]) {
+        change(settingSelector(key), value);
+        assert($('#generateButton').disabled && $('#generationSettingsStatus').classList.contains('is-error') && data.requests.length === 0, '無效 ' + key + ' 不會送出新批次');
+        change(settingSelector(key), defaults[key]);
+      }
+      const initialCards = [...doc.querySelectorAll('.candidate')];
+      change('#generationWidth', 1216);
+      change('#generationHeight', 832);
+      assert(cardsHaveRatio(doc, 1216, 832), '未抽牌時尺寸設定立即預覽橫牌卡背');
+      change('#generationWidth', 1024);
+      change('#generationHeight', 1024);
+      assert(cardsHaveRatio(doc, 1024, 1024), '未抽牌時 1024 × 1024 預覽方牌卡背');
+      assert(initialCards.every((card, index) => card === $('#candidateGrid').children[index]), '尺寸預覽沿用原卡片，不重播發牌動畫');
+      change('#generationWidth', 832);
+      change('#generationHeight', 1216);
+      click('#controlsDrawer [data-close-drawer]');
+      await until(() => !$('[data-panel="content"]').matches('[aria-expanded="true"]'), 'drawer closed');
+      assert(!$('[data-panel="content"]').matches('[aria-expanded="true"]'), '關閉抽屜同步展開狀態');
+      click('#generateButton');
+      click('#generateButton');
+      await until(() => data.pending, 'first request');
+      const firstCard = $('.candidate');
+      assert($('#resetButton').disabled && $('#applySeedButton').disabled, '生成中禁止重設與套用基因');
+      assert($('#generationCost').hidden && $('#nextBatchCost').hidden, '生成中隱藏原按鈕時，外部費用同步隱藏');
+      assert(!firstCard.classList.contains('is-revealed'), '圖片到達前保持卡背');
+      await answer();
+      await until(() => $('.candidate.is-revealed'), 'first reveal');
+      assert($('.candidate') === firstCard && data.requests.length === 1 && !data.pending, '回圖即揭示、沿用卡片，等待期間不提前發下一張');
+      assert(firstCard.querySelector('img').naturalWidth === 438 && firstCard.querySelector('img').naturalHeight === 640,
+        '卡桌使用最長邊 640px 的等比例縮圖，不解碼原始 832 × 1216 圖片');
+      const cardThumbnail = await (await win.fetch(firstCard.querySelector('img').src)).blob();
+      assert(cardThumbnail.type === 'image/webp' && cardThumbnail.size < data.image.size, '卡桌縮圖經 WebP 壓縮，原始 PNG 不改寫');
+      click('.candidate [data-action="select"]');
+      assert(!firstCard.classList.contains('selected'), '生成中點框內不會選取');
+      click('.candidate [data-action="like"]');
+      assert($('.candidate [data-action="like"]').disabled && !firstCard.classList.contains('selected'), '生成中禁止讚好');
+      click('.candidate [data-action="dislike"]');
+      assert($('.candidate [data-action="dislike"]').disabled && !firstCard.classList.contains('is-disliked'), '生成中禁止標記不喜歡');
+      click('#ignoreBatchButton');
+      assert($('#ignoreBatchButton').disabled && data.state.votes.length === 0 && data.requests.length === 1, '生成中不能忽略或提前換批');
+      change('#contentPrompt', 'next batch content');
+      change('#seedStylePrompt', '-1.7::simple illustration::, 0.3::watercolor::, best quality');
+      for (const [key, value] of Object.entries(custom)) change(settingSelector(key), value);
+      assert(!$('#generationWidth').disabled && !$('#generationSampler').disabled, '生成中可修改下一批設定');
+      assert(cardsHaveRatio(doc, 832, 1216), '進行中改橫向尺寸不改變本批直牌外觀');
+      change('#generationWidth', 800);
+      await until(() => data.requests.length === 2 && data.pending, 'second request after delay');
+      const imageGap = data.generationTimings[1].startedAt - data.generationTimings[0].savedAt;
+      assert(imageGap >= 490 && imageGap < 2000, '儲存完成後隨機等 0.5–1.5 秒，再送下一張（容許少量介面處理時間）');
+      await answer();
+      await until(() => data.images.size === 2 && !data.pending, 'waiting after second image');
+      click('#stopButton');
+      await until(() => !$('#generateButton').hidden, 'stopped');
+      assert(data.images.size === 2 && data.requests.length === 2, '等待期間停止立即結束，保留已完成兩張、不發第三張');
+      await pause(1600);
+      assert(data.requests.length === 2 && !data.pending, '停止清除等待計時器，不會延遲補發請求');
+      assert(!$('#generateButton').disabled && $('#generationSettingsStatus').classList.contains('is-error'), '下一批設定無效仍可繼續原批次');
+      change('#generationWidth', custom.width);
+      change('#generationSteps', 29);
+      assert($('#generationCost').textContent === '預估 0 Anlas' && $('#nextBatchCost').textContent === '預估 150 Anlas' && !$('#generationCost').hidden && $('#nextBatchCost').hidden, '繼續生成顯示原批次外部費用，下一批費用使用新 Steps');
+      change('#generationSteps', custom.steps);
+      change('#generationWidth', 800);
+      click('#generateButton');
+      await answer(true);
+      await answer();
+      await answer();
+      await until(() => !$('#generateButton').hidden, 'partial batch');
+      assert($('.candidate.has-error [data-action="retry"]') && data.images.size === 4, '失敗卡顯示重試，其他候選繼續');
+      assert($('#ignoreBatchButton').hidden && $('#ignoreBatchButton').disabled, '五張未全部完成時不能忽略');
+      const retryStartedAt = win.performance.now();
+      click('.candidate.has-error [data-action="retry"]');
+      await answer();
+      await until(() => !$('#dislikeAllButton').hidden && $('#stopButton').hidden, 'completed');
+      assert(data.generationTimings.at(-1).startedAt - retryStartedAt < 490 && win.performance.now() - data.generationTimings.at(-1).savedAt < 490, '單張重試立即發送，最後一張保存後不加尾端等待');
+      data.fastImageDelays = true;
+      assert($('#ignoreBatchButton').disabled && $('#dislikeAllButton').disabled && $('#submitVoteButton').disabled, '下一批設定無效時禁止提交換批');
+      change('#generationWidth', custom.width);
+      await until(() => doc.querySelectorAll('.is-revealed').length === 5, 'five visible images');
+      assert(!$('#ignoreBatchButton').hidden && !$('#ignoreBatchButton').disabled && $('#submitVoteButton').disabled, '無需選取也能忽略完整的一批');
+      assert($('#generationCost').hidden && !$('#nextBatchCost').hidden && $('#nextBatchCost').textContent === '預估 0 Anlas' && $('#submitVoteButton').getAttribute('aria-describedby') === 'nextBatchCost', '完成本批後切換為按鈕外的下一批費用，鍵盤輔助仍關聯');
+      for (const width of [1280, 800, 760, 390, 320]) {
+        frame.style.width = width + 'px';
+        await pause(30);
+        const bar = $('.vote-bar').getBoundingClientRect();
+        const cost = $('#nextBatchCost').getBoundingClientRect();
+        const buttons = [...$('.vote-actions').querySelectorAll('button:not([hidden])')].map(button => button.getBoundingClientRect());
+        assert(bar.left >= 0 && bar.right <= doc.documentElement.clientWidth && buttons.every(button => button.right <= doc.documentElement.clientWidth
+          && (cost.right <= button.left || button.right <= cost.left || cost.bottom <= button.top || button.bottom <= cost.top)), width + 'px 下一批費用在按鈕外不重疊、不溢出');
+      }
+      frame.style.width = initialFrameWidth;
+      assert(data.requests.every(r => r.prompt.includes('solo, landscape') && r.negativePrompt === 'text'), '進行中修改內容不影響本批與重試');
+      assert(data.requests.every(r => JSON.stringify(r.generationSettings) === JSON.stringify(defaults)), '本批五張及停止重試保持原生成設定');
+      assert(data.state.currentBatch.every(item => JSON.stringify(item.genome.styleTerms) === JSON.stringify(fixedQuality)), '本批五張及重試固定使用批次開始時的質量詞，無風格抽取');
+      assert(data.local.get('novelai_style_evolver_settings').includes('0.3::watercolor::'), '進行中修改質量詞自動保存，只影響下一批');
+      const legacyBatchRecords = structuredClone(data.state.currentBatch);
+      click('.candidate img');
+      assert($('#imageDialog').open && !firstCard.classList.contains('selected'), '點圖片只放大，不選取');
+      await until(() => $('#dialogImage').naturalWidth === 832 && $('#dialogImage').naturalHeight === 1216, 'full original preview loaded');
+      const previewBlob = await (await win.fetch($('#dialogImage').src)).blob();
+      assert(previewBlob.type === 'image/png' && previewBlob.size === data.image.size, '卡桌放大檢視載入原始高清 PNG，不使用縮圖');
+      assert($('#previewPrevious').hidden && $('#previewNext').hidden && $('#previewPosition').hidden, '本批單張預覽不混入歷史或收藏切換');
+      click('#closeDialogButton');
+      await until(() => {
+        const rect = firstCard.getBoundingClientRect();
+        return doc.elementFromPoint(rect.left + 3, rect.top + rect.height / 2)?.matches('[data-action="select"]');
+      }, 'preview backdrop released');
+      const bounds = firstCard.getBoundingClientRect();
+      const frameTarget = doc.elementFromPoint(bounds.left + 3, bounds.top + bounds.height / 2);
+      assert(frameTarget?.matches('[data-action="select"]'), '外框邊緣直接命中選取區域');
+      frameTarget.click();
+      await until(() => data.state.selectedIds.length === 1, 'frame selection');
+      assert($('.candidate [data-action="like"]').getAttribute('aria-pressed') === 'true', '點邊框同步點亮讚好');
+      const titleBounds = $('.candidate-title').getBoundingClientRect();
+      const titleTarget = doc.elementFromPoint(titleBounds.left + 5, titleBounds.top + titleBounds.height / 2);
+      assert(titleTarget?.matches('[data-action="select"]'), '卡名區直接命中選取區域');
+      titleTarget.click();
+      await until(() => data.state.selectedIds.length === 0, 'frame deselection');
+      assert(!firstCard.classList.contains('selected'), '再次點框內可取消選取');
+      assert($('.candidate [data-action="like"]').getAttribute('aria-pressed') === 'false', '點邊框取消時同步關閉讚好');
+      click('.candidate [data-action="like"]');
+      await until(() => data.state.selectedIds.length === 1, 'thumb selection');
+      assert(firstCard.classList.contains('selected') && $('.candidate [data-action="select"]').getAttribute('aria-pressed') === 'true', '讚好使用原有選取狀態與紫光特效');
+      click('.candidate [data-action="select"]');
+      await until(() => data.state.selectedIds.length === 0, 'frame cancels thumb');
+      assert($('.candidate [data-action="like"]').getAttribute('aria-pressed') === 'false', '邊框可取消讚好按鈕的選取');
+      click('.candidate [data-action="like"]');
+      click('.candidate [data-action="like"]');
+      await until(() => data.state.selectedIds.length === 0, 'thumb deselection');
+      assert(!firstCard.classList.contains('selected') && $('.candidate [data-action="like"]').getAttribute('aria-pressed') === 'false', '再次讚好可取消且不重複選取');
+      click('.candidate:nth-child(1) [data-action="like"]');
+      click('.candidate:nth-child(3) [data-action="select"]');
+      await until(() => data.state.selectedIds.length === 2 && $('#selectionSummary').textContent.includes('2 / 5'), 'multi-select');
+      assert($('.candidate') === firstCard && $('#selectionSummary').textContent.includes('2 / 5'), '多選兩張且不重播翻牌');
+      assert($('.candidate [data-action="select"]').getAttribute('aria-pressed') === 'true' && $('#submitVoteButton').textContent.includes('提交 2 張'), '選中狀態與提交數量同步');
+      click('.candidate [data-action="dislike"]');
+      await until(() => data.state.dislikedIds.length === 1, 'dislike saved');
+      assert(firstCard.classList.contains('is-disliked') && !firstCard.classList.contains('selected') && !firstCard.querySelector('.card-feedback').hidden, '不喜歡顯示獨立特效並取消喜歡');
+      assert($('.candidate [data-action="like"]').getAttribute('aria-pressed') === 'false', '不喜歡同步取消讚好圖示');
+      assert(Object.keys(data.state.stats).length === 0 && data.state.votes.length === 0, '標記先保存，提交前不扣分');
+      click('.candidate [data-action="dislike"]');
+      await until(() => data.state.dislikedIds.length === 0, 'dislike cancelled');
+      assert(!firstCard.classList.contains('is-disliked') && !firstCard.classList.contains('selected'), '再點不喜歡可取消為未選');
+      click('.candidate [data-action="dislike"]');
+      click('.candidate [data-action="select"]');
+      await until(() => data.state.dislikedIds.length === 0 && data.state.selectedIds.length === 2, 'like replaces dislike');
+      assert(firstCard.classList.contains('selected') && !firstCard.classList.contains('is-disliked'), '點框內喜歡可取代不喜歡');
+      click('.candidate [data-action="dislike"]');
+      click('.candidate [data-action="like"]');
+      await until(() => data.state.dislikedIds.length === 0 && data.state.selectedIds.length === 2, 'thumb replaces dislike');
+      assert(firstCard.classList.contains('selected') && $('.candidate [data-action="dislike"]').getAttribute('aria-pressed') === 'false', '讚好按鈕同樣可取代不喜歡');
+      click('.candidate:nth-child(2) [data-action="dislike"]');
+      await until(() => data.state.dislikedIds.length === 1, 'second card dislike');
+      click('.candidate:nth-child(2) img');
+      assert($('#imageDialog').open && data.state.selectedIds.length === 2 && data.state.dislikedIds.length === 1, '不喜歡的圖片仍可放大且不改變標記');
+      click('#closeDialogButton');
+      click('.candidate [data-action="details"]');
+      assert($('#imageDialog').open && $('#imageDialog details').open, '完整 Prompt 預覽');
+      assert(!$('#previewFavorite').hidden && !$('#previewFavorite').disabled && $('#previewFavorite use').getAttribute('href') === '#i-star', '本批放大預覽提供星星收藏按鈕');
+      click('#previewFavorite');
+      await until(() => data.favorites.size === 1 && $('#previewFavorite').getAttribute('aria-pressed') === 'true' && !$('#previewFavorite').disabled, 'preview favorite saved');
+      assert(data.favorites.get(data.state.currentBatch[0].id).savePointId === data.state.currentBatch[0].savePointId && Object.keys(data.state.stats).length === 0, '預覽收藏沿用原完整儲存點，不修改分數或選取');
+      click('#previewFavorite');
+      await until(() => data.favorites.size === 0 && $('#previewFavorite').getAttribute('aria-pressed') === 'false' && !$('#previewFavorite').disabled, 'preview favorite cancelled');
+      assert(data.images.size === 5 && $('#imageDialog').open, '預覽取消收藏保留歷史及目前圖片');
+      click('#closeDialogButton');
+      click('.candidate:nth-child(4) [data-action="favorite"]');
+      await until(() => data.favorites.size === 1, 'favorite');
+      assert(!$('.candidate:nth-child(4)').classList.contains('selected') && $('.candidate:nth-child(4) [data-action="like"]').getAttribute('aria-pressed') === 'false' && Object.keys(data.state.stats).length === 0, '星星收藏不會讚好或改分');
+      assert($('.candidate:nth-child(4) [data-action="favorite"]').getAttribute('aria-pressed') === 'true' && data.savepoints.size === 1 && new Set(data.state.currentBatch.map(item => item.savePointId)).size === 1, '星星點亮，五張牌共用一份完整儲存點快照');
+      const firstPoint = data.savepoints.get(data.state.currentBatch[0].savePointId);
+      assert(firstPoint.settings.contentPrompt === 'solo, landscape' && firstPoint.settings.negativePrompt === 'text' && firstPoint.settings.generationSettings.width === 832 && Object.keys(firstPoint.stats).length === 0 && firstPoint.image2Image.blob === null, '儲存點固定在批次開始，不採用生成途中修改的內容與設定');
+      click('.candidate:nth-child(4) [data-action="favorite"]');
+      await until(() => data.favorites.size === 0 && $('.candidate:nth-child(4) [data-action="favorite"]').getAttribute('aria-pressed') === 'false', 'candidate unfavorited');
+      assert(data.images.size === 5 && data.state.votes.length === 0, '卡片再次按星星取消收藏，保留歷史與評分');
+      click('.candidate:nth-child(4) [data-action="favorite"]');
+      await until(() => data.favorites.size === 1, 'candidate refavorited');
+      click('[data-drawer-library="favorites"]');
+      await until(() => $('.library-preview'), 'favorite library');
+      assert($('#libraryDrawer').open && doc.querySelectorAll('.library-item').length === 1, '收藏抽屜顯示圖片');
+      await until(() => $('.library-item img').naturalHeight === 320, 'favorite thumbnail loaded');
+      assert($('.library-item img').naturalWidth === 219 && $('.library-item img').naturalHeight === 320, '收藏清單使用最長邊 320px 等比例縮圖');
+      click('.library-preview');
+      assert($('#imageDialog').open, '收藏圖片可放大');
+      assert($('#previewFavorite').getAttribute('aria-pressed') === 'true' && $('#previewFavorite').textContent.includes('已收藏'), '收藏放大預覽顯示目前星星狀態');
+      assert(!$('#previewPrevious').hidden && !$('#previewNext').hidden && $('#previewPrevious').disabled && $('#previewNext').disabled && $('#previewPosition').textContent === '收藏 · 1 / 1', '單張收藏顯示左右按鈕及序號，兩端停用');
+      click('#closeDialogButton');
+      await until(() => !$('#imageDialog').open && !$('#dialogImage').getAttribute('src'), 'single preview released');
+      click('[data-library="history"]');
+      await until(() => doc.querySelectorAll('.library-item').length === 5 && $('[data-library="history"]').getAttribute('aria-selected') === 'true', 'history navigation ready');
+      const historyRecords = [...data.images.values()];
+      const decodesBeforeRedraw = data.decodeCalls;
+      click('[data-library="favorites"]');
+      await until(() => doc.querySelectorAll('.library-item').length === 1, 'cached favorites rendered');
+      click('[data-library="history"]');
+      await until(() => doc.querySelectorAll('.library-item').length === 5, 'cached history rendered');
+      assert(data.decodeCalls === decodesBeforeRedraw, '歷史與收藏重繪重用縮圖，不重新解碼五張高清圖');
+      await until(() => $('.library-item img').naturalHeight === 320, 'history thumbnail loaded');
+      assert($('.library-item img').naturalWidth === 219, '歷史清單也使用最長邊 320px 縮圖');
+      const navigationBefore = JSON.stringify({ selected: data.state.selectedIds, disliked: data.state.dislikedIds, stats: data.state.stats, votes: data.state.votes });
+      const oldRevoke = win.URL.revokeObjectURL;
+      const revokedPreviews = [];
+      win.URL.revokeObjectURL = url => { revokedPreviews.push(url); return oldRevoke.call(win.URL, url); };
+      try {
+        click('.library-item:nth-child(2) .library-preview');
+        await until(() => $('#dialogImage').naturalHeight === 1216, 'original history image loaded');
+        assert($('#dialogImage').naturalWidth === 832, '歷史放大檢視仍載入原圖');
+        const historyUrl = $('#dialogImage').src;
+        assert($('#previewPosition').textContent === '歷史 · 2 / 5' && $('#dialogPrompt').textContent.startsWith(historyRecords[1].prompt), '歷史從點開的圖片開始，序號與 Prompt 同步');
+        click('#previewFavorite');
+        await until(() => data.favorites.has(historyRecords[1].id) && !$('#previewFavorite').disabled, 'history preview favorited');
+        assert($('#previewFavorite').getAttribute('aria-pressed') === 'true' && $('#previewPosition').textContent === '歷史 · 2 / 5', '歷史預覽可直接收藏，清單重繪不影響目前導航');
+        click('#previewFavorite');
+        await until(() => !data.favorites.has(historyRecords[1].id) && !$('#previewFavorite').disabled, 'history preview unfavorited');
+        click('#imageDialog summary');
+        click('#previewNext');
+        assert($('#previewPosition').textContent === '歷史 · 3 / 5' && $('#dialogPrompt').textContent === historyRecords[2].prompt + '\n\nNegative Prompt:\n' + historyRecords[2].negativePrompt && $('#imageDialog details').open, '下一張更新圖片及正反 Prompt，保留展開狀態');
+        assert($('#dialogImage').src !== historyUrl && revokedPreviews.includes(historyUrl), '切換後釋放上一張預覽 URL，不累積圖片記憶體');
+        $('#imageDialog').dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+        assert($('#previewPosition').textContent === '歷史 · 2 / 5', '鍵盤左箭頭切換上一張歷史');
+        $('#previewNext').dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        assert($('#previewPosition').textContent === '歷史 · 3 / 5', '焦點在按鈕時鍵盤右箭頭也能切換');
+        $('#imageDialog').dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowLeft', altKey: true, bubbles: true }));
+        assert($('#previewPosition').textContent === '歷史 · 3 / 5', '帶 Alt 的左右鍵不攔截瀏覽器捷徑');
+        assert($('#previewFavorite').getAttribute('aria-pressed') === 'true', '左右切到已收藏圖片，星星同步亮起');
+        click('#previewNext');
+        assert($('#previewFavorite').getAttribute('aria-pressed') === 'false', '左右切到未收藏圖片，星星同步熄滅');
+        click('#previewNext');
+        $('#imageDialog').dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        assert($('#previewPosition').textContent === '歷史 · 5 / 5' && $('#previewNext').disabled && !$('#previewPrevious').disabled, '到最後一張停住，不循環或跳過邊界');
+        for (let step = 0; step < 5; step += 1) $('#imageDialog').dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+        assert($('#previewPosition').textContent === '歷史 · 1 / 5' && $('#previewPrevious').disabled && !$('#previewNext').disabled, '到第一張停住並停用上一張按鈕');
+        for (const width of [320, 760, 1024]) {
+          frame.style.width = width + 'px';
+          await pause(30);
+          const shell = $('.preview-image-shell').getBoundingClientRect();
+          const left = $('#previewPrevious').getBoundingClientRect();
+          const right = $('#previewNext').getBoundingClientRect();
+          assert(left.width >= 40 && right.width >= 40 && left.left >= shell.left && right.right <= shell.right && left.right < right.left, width + 'px 左右按鈕有足夠點擊區且不溢出預覽');
+        }
+        frame.style.width = initialFrameWidth;
+        const lastHistoryUrl = $('#dialogImage').src;
+        click('#closeDialogButton');
+        await until(() => !$('#dialogImage').getAttribute('src'), 'history preview cleanup');
+        assert(revokedPreviews.includes(lastHistoryUrl), '關閉預覽釋放最後一張 URL');
+      } finally {
+        win.URL.revokeObjectURL = oldRevoke;
+        frame.style.width = initialFrameWidth;
+      }
+      click('#libraryDrawer [data-close-drawer]');
+      await until(() => doc.querySelectorAll('.library-item').length === 0, 'hidden thumbnail elements released');
+      assert(!$('#libraryDrawer').open && !$('#libraryGrid').children.length, '關閉清單移除隱藏縮圖，釋放顯示資源');
+      click('.candidate:nth-child(2) [data-action="favorite"]');
+      await until(() => data.favorites.size === 2, 'temporary second favorite');
+      click('[data-drawer-library="favorites"]');
+      await until(() => doc.querySelectorAll('.library-item').length === 2, 'two favorite navigation ready');
+      const favoriteRecords = [...data.favorites.values()];
+      click('.library-item:nth-child(1) .library-preview');
+      click('#previewNext');
+      assert($('#previewPosition').textContent === '收藏 · 2 / 2' && $('#dialogPrompt').textContent.startsWith(favoriteRecords[1].prompt), '收藏下一張只瀏覽收藏清單，不混入歷史');
+      $('#imageDialog').dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      assert($('#previewPosition').textContent === '收藏 · 1 / 2' && $('#dialogPrompt').textContent.startsWith(favoriteRecords[0].prompt), '收藏也可用鍵盤上一張，Prompt 跟隨圖片');
+      click('#closeDialogButton');
+      await until(() => !$('#dialogImage').getAttribute('src'), 'favorite preview cleanup');
+      click('.library-item:nth-child(2) [data-toggle-favorite]');
+      await until(() => data.favorites.size === 1 && doc.querySelectorAll('.library-item').length === 1, 'temporary favorite removed');
+      click('.library-preview');
+      assert($('#previewPosition').textContent === '收藏 · 1 / 1' && $('#previewNext').disabled && $('#previewPrevious').disabled, '取消收藏後重新點開使用最新清單及邊界');
+      click('#closeDialogButton');
+      await until(() => !$('#dialogImage').getAttribute('src'), 'latest preview cleanup');
+      assert(JSON.stringify({ selected: data.state.selectedIds, disliked: data.state.dislikedIds, stats: data.state.stats, votes: data.state.votes }) === navigationBefore, '瀏覽歷史／收藏不修改正負標記、分數或投票，也不載入儲存點');
+      doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      assert(!$('#imageDialog').open && $('[data-library="favorites"]').getAttribute('aria-selected') === 'true', '關閉預覽後左右鍵不重新開圖或切換底下頁籤');
+      click('#libraryDrawer [data-close-drawer]');
+      click('.candidate [data-action="download"]');
+      await until(() => data.downloads.length, 'download');
+      assert(data.downloads[0].endsWith('.png'), '下載流程保留 PNG metadata');
+      assert(data.state.selectedIds.length === 2 && data.state.dislikedIds.length === 1, 'Prompt、收藏與下載不改變正負標記');
+      const rejectedId = data.state.currentBatch[1].id;
+      const neutralId = data.state.currentBatch[3].id;
+      const insertedCards = [];
+      const batchObserver = new win.MutationObserver(records => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (node.matches?.('.candidate')) insertedCards.push({ id: node.dataset.id, animated: node.classList.contains('card-enter') });
+          }
+        }
+      });
+      batchObserver.observe($('#candidateGrid'), { childList: true });
+      // Expose intermediate paints that fast in-memory saves would otherwise hide.
+      data.saveDelay = 100;
+      click('#submitVoteButton');
+      click('#submitVoteButton');
+      await until(() => data.state.batchNumber === 2 && data.pending, 'second batch');
+      const nextQuality = parseStylePrompt($('#seedStylePrompt').value);
+      assert(nextQuality.length === 3 && data.state.currentBatch.every(item => JSON.stringify(item.genome.styleTerms) === JSON.stringify(nextQuality)),
+        '新批次五張採用修改後三個質量詞，交叉重組也不混入父基因風格');
+      data.saveDelay = 0;
+      batchObserver.disconnect();
+      assert(!insertedCards.some(card => card.id.startsWith('empty-')), '換批不先顯示終點佔位牌再跳回發牌起點');
+      assert(insertedCards.length === 5 && insertedCards.every(card => card.animated), '第二批只建立一次五張發牌卡');
+      const secondBatchCards = [...doc.querySelectorAll('.candidate')];
+      await until(() => !$('.card-enter'), 'second deal finished');
+      assert(secondBatchCards.every((card, index) => card === $('#candidateGrid').children[index]), '發牌結束不重建或重播卡片');
+      assert(data.state.votes.length === 1 && data.state.parents.length === 2, '連點只投票一次，保留兩個父基因');
+      const likedDeltas = data.state.votes[0].selectedIds.map(id => data.state.votes[0].candidateDeltas[id]);
+      assert(likedDeltas.length === 2 && likedDeltas.every(delta => delta === 1.5), '讚好與邊框選取按相同規則計分一次');
+      assert(data.state.votes[0].dislikedIds.includes(rejectedId) && data.state.votes[0].candidateDeltas[rejectedId] === -3 && data.state.votes[0].candidateDeltas[neutralId] === -1, '明確不喜歡扣 3 分，普通未選扣 1 分');
+      assert(data.state.selectedIds.length === 0 && data.state.dislikedIds.length === 0, '下一批清除正負標記');
+      assert(data.requests.at(-1).prompt.includes('next batch content'), '下一批套用新內容');
+      assert(JSON.stringify(data.requests.at(-1).generationSettings) === JSON.stringify(custom) && data.state.currentBatch.every(candidate => candidate.request.parameters.width === 1216 && candidate.fixedSettings.sampler === 'Euler'), '下一批請求與 metadata 套用新尺寸及所有生成參數');
+      assert([...doc.querySelectorAll('.candidate img')].every(image => win.getComputedStyle(image).objectFit === 'contain'), '不同長寬比完整顯示圖片，不裁切塔羅卡內容');
+      assert(cardsHaveRatio(doc, 1216, 832), '下一批的五張圖片框、卡背及卡牌高度改為橫向');
+      click('#stopButton');
+      await until(() => !$('#generateButton').hidden, 'stop second batch');
+      click('[data-panel="settings"]');
+      click('#reduceMotion');
+      assert(doc.body.classList.contains('reduce-motion'), '減少動態效果立即生效');
+      click('#controlsDrawer [data-close-drawer]');
+      click('#generateButton');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !$('#dislikeAllButton').disabled, 'finish second batch');
+      click('#dislikeAllButton');
+      await until(() => data.state.batchNumber === 3 && data.pending, 'third batch');
+      assert(data.state.votes.length === 2 && data.state.votes.at(-1).selectedIds.length === 0, '全部不喜歡可繼續探索');
+      assert(data.state.votes.at(-1).dislikedIds.length === 5 && Object.values(data.state.votes.at(-1).candidateDeltas).every(delta => delta === -3), '全部不喜歡會對五張套用加強扣分');
+      click('#stopButton');
+      await until(() => !$('#generateButton').hidden, 'final stop');
+      click('#generateButton');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !$('#dislikeAllButton').disabled, 'dislike-only batch');
+      click('.candidate [data-action="dislike"]');
+      await until(() => data.state.dislikedIds.length === 1, 'dislike-only saved');
+      const parentIds = data.state.parents.map(parent => parent.id).join(',');
+      assert(data.state.selectedIds.length === 0 && !$('#submitVoteButton').disabled, '只有不喜歡也能提交');
+      click('#submitVoteButton');
+      click('#submitVoteButton');
+      await until(() => data.state.batchNumber === 4 && data.pending, 'dislike-only submitted');
+      assert(data.state.votes.length === 3 && data.state.votes.at(-1).dislikedIds.length === 1 && data.state.parents.map(parent => parent.id).join(',') === parentIds, '純負向投票只提交一次且不成為父基因');
+      click('#stopButton');
+      await until(() => !$('#generateButton').hidden, 'stop fourth batch');
+      // Leave both reactions available for visual and keyboard checks.
+      click('#generateButton');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !$('#dislikeAllButton').disabled, 'visual review batch');
+      click('.candidate:nth-child(1) [data-action="select"]');
+      click('.candidate:nth-child(3) [data-action="select"]');
+      click('.candidate:nth-child(2) [data-action="dislike"]');
+      await until(() => data.state.dislikedIds.length === 1 && data.state.selectedIds.length === 2, 'final feedback saved');
+      const saved = structuredClone(data.state);
+      const reloadFrame = async () => {
+        const oldDocument = frame.contentDocument;
+        frame.srcdoc = frame.srcdoc;
+        await until(() => frame.contentDocument !== oldDocument && frame.contentDocument.querySelector('#dislikeAllButton')?.disabled === false, 'frame restored');
+        return frame.contentDocument;
+      };
+      delete data.state.dislikedIds;
+      let restoredDoc = await reloadFrame();
+      assert(restoredDoc.querySelectorAll('.candidate.selected').length === 2 && !restoredDoc.querySelector('.is-disliked') && data.favorites.size === 1 && data.state.votes.length === 3, '舊版缺少不喜歡欄位仍保留選取、收藏及投票');
+      data.state = saved;
+      restoredDoc = await reloadFrame();
+      assert(restoredDoc.querySelectorAll('.candidate.selected').length === 2 && restoredDoc.querySelectorAll('.candidate.is-disliked').length === 1 && restoredDoc.querySelector('[data-action="dislike"][aria-pressed="true"]'), '重新載入保留正負標記及對應特效');
+      assert(restoredDoc.querySelectorAll('[data-action="like"][aria-pressed="true"]').length === 2, '重新載入同步恢復讚好圖示');
+      const previousParents = data.state.parents.map(parent => parent.id).join(',');
+      const ignoredIds = data.state.currentBatch.map(candidate => candidate.id);
+      const previousVotes = data.state.votes.length;
+      restoredDoc.querySelector('#ignoreBatchButton').click();
+      restoredDoc.querySelector('#ignoreBatchButton').click();
+      await until(() => data.state.batchNumber === 5 && data.pending, 'ignored batch submitted');
+      const ignoredVote = data.state.votes.at(-1);
+      assert(data.state.votes.length === previousVotes + 1 && ignoredIds.every(id => ignoredVote.candidateDeltas[id] === -1), '忽略連點只提交一次且五張各扣 1 分');
+      assert(ignoredVote.selectedIds.length === 0 && ignoredVote.dislikedIds.length === 0 && data.state.selectedIds.length === 0 && data.state.dislikedIds.length === 0, '忽略不採用已標記的讚好與不喜歡');
+      assert(data.state.parents.map(parent => parent.id).join(',') === previousParents, '忽略保留原有父基因，不採用本批');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !restoredDoc.querySelector('#ignoreBatchButton').disabled, 'next ignored batch complete');
+      assert(data.state.batchNumber === 5 && !restoredDoc.querySelector('#ignoreBatchButton').hidden, '忽略後正常生成下一批且可繼續操作');
+      let refDoc = restoredDoc;
+      let refWin = frame.contentWindow;
+      const ref$ = selector => refDoc.querySelector(selector);
+      const refClick = selector => ref$(selector).click();
+      const upload = async (blob, name, type = 'image/png') => {
+        const transfer = new refWin.DataTransfer();
+        transfer.items.add(new refWin.File([blob], name, { type }));
+        ref$('#referenceFile').files = transfer.files;
+        ref$('#referenceFile').dispatchEvent(new refWin.Event('change', { bubbles: true }));
+        await until(() => !ref$('#referenceFile').disabled, 'reference saved');
+      };
+      const setReferenceParameter = async (selector, field, value) => {
+        ref$(selector).value = value;
+        ref$(selector).dispatchEvent(new refWin.Event('input', { bubbles: true }));
+        ref$(selector).dispatchEvent(new refWin.Event('change', { bubbles: true }));
+        await until(() => data.otherStates.get('image2image')?.[field] === value && !ref$('#referenceFile').disabled, field + ' saved');
+      };
+      const reloadReferenceFrame = async () => {
+        const oldDocument = refDoc;
+        frame.srcdoc = frame.srcdoc;
+        await until(() => frame.contentDocument !== oldDocument && (frame.contentDocument.querySelector('#generateButton')?.disabled === false || frame.contentDocument.querySelector('#ignoreBatchButton')?.disabled === false), 'reference frame restored');
+        refDoc = frame.contentDocument;
+        refWin = frame.contentWindow;
+      };
+      const sourceCanvas = refDoc.createElement('canvas');
+      sourceCanvas.width = 400;
+      sourceCanvas.height = 200;
+      sourceCanvas.getContext('2d').fillStyle = '#783ea7';
+      sourceCanvas.getContext('2d').fillRect(0, 0, 400, 200);
+      const sourceImage = await new Promise(resolve => sourceCanvas.toBlob(resolve, 'image/png'));
+      refClick('[data-panel="content"]');
+      await upload(sourceImage, 'reference-one.png');
+      let reference = data.otherStates.get('image2image');
+      await until(() => ref$('#referencePreview').naturalWidth === 384, 'reference preview loaded');
+      assert(reference.enabled && reference.blob.type === 'image/png' && ref$('#image2ImageEnabled').checked && !ref$('#referencePreview').hidden, '上傳後自動啟用並顯示保存的參考圖');
+      const decoded = await refWin.createImageBitmap(reference.blob);
+      const fittedCanvas = refDoc.createElement('canvas');
+      fittedCanvas.width = decoded.width;
+      fittedCanvas.height = decoded.height;
+      fittedCanvas.getContext('2d').drawImage(decoded, 0, 0);
+      const pixel = (x, y) => [...fittedCanvas.getContext('2d').getImageData(x, y, 1, 1).data];
+      assert(decoded.width === 384 && decoded.height === 192 && pixel(0, 0).join(',') === '120,62,167,255' && pixel(192, 96).join(',') === '120,62,167,255', 'Image2Image 按來源比例轉成合法預覽尺寸，不拉伸或裁切');
+      assert(ref$('#generationWidth').value === '384' && ref$('#generationHeight').value === '192' && reference.width === 384 && reference.height === 192 && JSON.parse(data.local.get('novelai_style_evolver_settings')).generationSettings.width === 384,
+        '上傳 Image2Image 同步 64 倍數寬高並保存，當前卡牌仍保留原尺寸');
+      decoded.close();
+      refClick('#image2ImageEnabled');
+      await until(() => !data.otherStates.get('image2image').enabled && !ref$('#referenceFile').disabled, 'reference disabled');
+      assert(!ref$('#referencePreview').hidden && data.otherStates.get('image2image').blob.size === reference.blob.size, '關閉 Image2Image 不刪除參考圖');
+      refClick('#image2ImageEnabled');
+      await until(() => data.otherStates.get('image2image').enabled && !ref$('#referenceFile').disabled, 'reference reenabled');
+      await upload(new Blob(['invalid']), 'invalid.txt', 'text/plain');
+      assert(data.otherStates.get('image2image').fileName === 'reference-one.png' && ref$('#statusText').classList.contains('is-error'), '不支援的格式顯示錯誤且不覆蓋參考圖');
+      await upload(new Blob(['broken png']), 'broken.png');
+      assert(data.otherStates.get('image2image').fileName === 'reference-one.png' && ref$('#image2ImageEnabled').checked, '損壞圖片不覆蓋參考圖或啟用狀態');
+      await setReferenceParameter('#imageStrength', 'strength', 0.35);
+      await setReferenceParameter('#imageNoise', 'noise', 0.15);
+      await reloadReferenceFrame();
+      assert(ref$('#image2ImageEnabled').checked && ref$('#imageStrength').value === '0.35' && ref$('#imageNoise').value === '0.15' && ref$('#referenceInfo').textContent.includes('reference-one.png'), '重新開啟保留參考圖、啟用狀態、Strength 與 Noise');
+      assert(ref$('#contentPrompt').value === 'next batch content' && ref$('#negativePrompt').value === 'text', '內容與 Negative Prompt 重新開啟仍保留');
+      const settingsMatch = settings => Object.entries(settings).every(([key, value]) => typeof value === 'boolean' ? ref$(settingSelector(key)).checked === value : ref$(settingSelector(key)).value === String(value));
+      assert(ref$('#generationWidth').value === '384' && ref$('#generationHeight').value === '192', '重載保留 Image2Image 自動同步的尺寸');
+      for (const [key, value] of Object.entries(custom)) {
+        if (typeof value === 'boolean') ref$(settingSelector(key)).checked = value;
+        else ref$(settingSelector(key)).value = value;
+        ref$(settingSelector(key)).dispatchEvent(new refWin.Event('input', { bubbles: true }));
+      }
+      await reloadReferenceFrame();
+      assert(settingsMatch(custom), '重新開啟保留所有自訂生成設定');
+      const imageRequestStart = data.requests.length;
+      refClick('#ignoreBatchButton');
+      await until(() => data.state.batchNumber === 6 && data.pending, 'img2img batch started');
+      const batchReference = structuredClone(data.state.batchImage2Image);
+      assert(batchReference.image && data.requests.at(-1).image2Image.strength === 0.35 && data.requests.at(-1).image2Image.noise === 0.15, '新批次傳送已保存的 Image2Image 設定');
+      const batchImage = new Blob([Uint8Array.from(atob(batchReference.image), char => char.charCodeAt(0))], { type: 'image/png' });
+      const batchBitmap = await refWin.createImageBitmap(batchImage);
+      const batchCanvas = refDoc.createElement('canvas');
+      batchCanvas.width = batchBitmap.width;
+      batchCanvas.height = batchBitmap.height;
+      batchCanvas.getContext('2d').drawImage(batchBitmap, 0, 0);
+      assert(batchBitmap.width === 1216 && batchBitmap.height === 832 && [...batchCanvas.getContext('2d').getImageData(608, 200, 1, 1).data].join(',') === '120,62,167,255', 'Image2Image 依新生成尺寸從原圖重新補邊，不重複縮小預覽圖');
+      batchBitmap.close();
+      await answer();
+      await until(() => data.pending && data.requests.length === imageRequestStart + 2, 'img2img second request');
+      refClick('[data-panel="content"]');
+      const replacementCanvas = refDoc.createElement('canvas');
+      replacementCanvas.width = 400;
+      replacementCanvas.height = 200;
+      replacementCanvas.getContext('2d').fillStyle = '#e08948';
+      replacementCanvas.getContext('2d').fillRect(0, 0, 400, 200);
+      const replacementImage = await new Promise(resolve => replacementCanvas.toBlob(resolve, 'image/png'));
+      await upload(replacementImage, 'reference-two.png');
+      assert(ref$('#generationWidth').value === '384' && ref$('#generationHeight').value === '192' && data.state.currentBatch[0].generationSettings.width === 1216,
+        '生成途中更換 Image2Image 只同步下一批尺寸，不更改本批快照');
+      await setReferenceParameter('#imageStrength', 'strength', 0.9);
+      await setReferenceParameter('#imageNoise', 'noise', 0.3);
+      const nextGeneration = { ...defaults, width: 1024, height: 768, seed: 0, sampler: 'k_dpmpp_2m', steps: 25, guidance: 6, cfgRescale: 0.4 };
+      for (const [key, value] of Object.entries(nextGeneration)) {
+        if (typeof value === 'boolean') ref$(settingSelector(key)).checked = value;
+        else ref$(settingSelector(key)).value = value;
+        ref$(settingSelector(key)).dispatchEvent(new refWin.Event('input', { bubbles: true }));
+      }
+      refClick('#image2ImageEnabled');
+      await until(() => !data.otherStates.get('image2image').enabled && !ref$('#referenceFile').disabled, 'replacement disabled');
+      refClick('#controlsDrawer [data-close-drawer]');
+      refClick('#stopButton');
+      await until(() => !ref$('#generateButton').hidden, 'img2img stopped');
+      await reloadReferenceFrame();
+      assert(!ref$('#image2ImageEnabled').checked && ref$('#referenceInfo').textContent.includes('reference-two.png') && ref$('#imageStrength').value === '0.9' && ref$('#imageNoise').value === '0.3', '中途更換與關閉設定在重新開啟後仍保留');
+      assert(data.state.batchImage2Image.image === batchReference.image && data.state.batchImage2Image.strength === 0.35, '未完成批次保留獨立的原始參考圖快照');
+      assert(settingsMatch(nextGeneration) && data.state.currentBatch.every(candidate => JSON.stringify(candidate.generationSettings) === JSON.stringify(custom)), '重載同時保留下一批新設定與本批原設定，互不覆蓋');
+      assert(cardsHaveRatio(refDoc, 1216, 832), '重新開啟與重試維持本批原橫向卡形');
+      refClick('#generateButton');
+      await answer(true);
+      for (let i = 0; i < 3; i++) await answer();
+      await until(() => !ref$('#generateButton').hidden, 'img2img partial batch');
+      refClick('.candidate.has-error [data-action="retry"]');
+      await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'img2img retry complete');
+      assert(data.requests.slice(imageRequestStart).every(request => JSON.stringify(request.image2Image) === JSON.stringify(batchReference)), '五張與停止、重載、失敗重試均沿用同一張參考圖及參數');
+      assert(data.requests.slice(imageRequestStart).every(request => JSON.stringify(request.generationSettings) === JSON.stringify(custom)), 'Image2Image 後續生成及重載重試沿用原生成參數');
+      const imageRecords = [...data.images.values()].filter(record => record.batchId === 'batch_6');
+      assert(imageRecords.length === 5 && imageRecords.every(record => record.request.action === 'img2img' && !('image' in record.request.parameters) && record.image2Image.fileName === 'reference-one.png'), '歷史保存 Image2Image 摘要，不重複嵌入參考圖本體');
+      refClick('[data-drawer-library="history"]');
+      await until(() => refDoc.querySelectorAll('.library-item').length > 0, 'landscape history loaded');
+      assert([...refDoc.querySelectorAll('.library-item')].some(element => Math.abs(elementRatio(element) - 1216 / 832) < 0.01), '橫向歷史縮圖保留 1216 × 832 比例');
+      refClick('#libraryDrawer [data-close-drawer]');
+      const textRequestStart = data.requests.length;
+      refClick('#ignoreBatchButton');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'disabled next batch complete');
+      assert(data.state.batchNumber === 7 && data.state.batchImage2Image === null && data.requests.slice(textRequestStart).every(request => request.image2Image === null), '關閉後的下一批回到文字生圖，保留輸入參考圖');
+      assert(data.requests.slice(textRequestStart).every(request => JSON.stringify(request.generationSettings) === JSON.stringify(nextGeneration)), '下一批五張使用新生成設定，Seed 0 不會變成預設或隨機值');
+      refWin.confirm = () => true;
+      refClick('[data-panel="settings"]');
+      refClick('#resetButton');
+      await until(() => data.state?.batchNumber === 1 && !data.state.currentBatch.length && !ref$('#generateButton').hidden, 'exploration reset');
+      assert(data.otherStates.get('image2image').fileName === 'reference-two.png' && data.favorites.size === 1 && ref$('#contentPrompt').value === 'next batch content', '重新開始探索保留參考圖、內容及收藏');
+      assert(settingsMatch(nextGeneration), '重新開始探索不清除自訂生成設定');
+      refClick('[data-panel="content"]');
+      refClick('#removeReferenceButton');
+      await until(() => !data.otherStates.get('image2image').blob && !ref$('#referenceFile').disabled, 'reference removed');
+      assert(!ref$('#image2ImageEnabled').checked && ref$('#image2ImageEnabled').disabled && ref$('#referencePreview').hidden, '只有移除參考圖才刪除保存的輸入圖');
+      await reloadReferenceFrame();
+      assert(ref$('#referencePreview').hidden && !ref$('#image2ImageEnabled').checked, '移除後重新開啟不會恢復已刪除的參考圖');
+      data.state.currentBatch = legacyBatchRecords.map(record => {
+        const { generationSettings, ...legacy } = record;
+        return { ...legacy, status: 'pending', error: '' };
+      });
+      data.state.selectedIds = [];
+      data.state.dislikedIds = [];
+      const legacyRequestStart = data.requests.length;
+      await reloadReferenceFrame();
+      refClick('#generateButton');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'legacy batch completed');
+      assert(data.requests.slice(legacyRequestStart).every(request => JSON.stringify(request.generationSettings) === JSON.stringify(defaults)), '舊批次缺少生成設定快照時仍沿用原預設，不混入新設定');
+      assert(cardsHaveRatio(refDoc, 832, 1216), '舊批次從既有請求尺寸還原直牌比例');
+      refClick('[data-panel="settings"]');
+      for (const key of ['width', 'height']) {
+        ref$(settingSelector(key)).value = 1024;
+        ref$(settingSelector(key)).dispatchEvent(new refWin.Event('input', { bubbles: true }));
+      }
+      assert(cardsHaveRatio(refDoc, 832, 1216), '已完成批次仍保留直牌，方形設定只影響下一批');
+      refClick('#controlsDrawer [data-close-drawer]');
+      refClick('#ignoreBatchButton');
+      await until(() => data.pending, 'square batch started');
+      assert(cardsHaveRatio(refDoc, 1024, 1024), '方形批次開始時五張牌已使用方形圖片框');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'square batch complete');
+      refClick('.candidate [data-action="select"]');
+      await until(() => data.state.selectedIds.length === 1, 'square selected');
+      assert(ref$('.candidate').classList.contains('selected') && cardsHaveRatio(refDoc, 1024, 1024), '方牌框內選取維持紫光特效與正確比例');
+      refClick('.candidate img');
+      assert(ref$('#imageDialog').open && data.state.selectedIds.length === 1, '方牌點圖片仍只放大，不改變選取');
+      refClick('#closeDialogButton');
+      refClick('.candidate [data-action="favorite"]');
+      await until(() => data.favorites.size === 2, 'square favorite saved');
+      refClick('[data-drawer-library="favorites"]');
+      await until(() => refDoc.querySelectorAll('.library-item').length === 2, 'mixed favorites loaded');
+      const favoriteRatios = [...refDoc.querySelectorAll('.library-item')].map(elementRatio);
+      assert(favoriteRatios.some(ratio => Math.abs(ratio - 1) < 0.01) && favoriteRatios.some(ratio => Math.abs(ratio - 832 / 1216) < 0.01), '收藏同時保留方牌與舊直牌的各自縮圖比例');
+      refClick('[data-library="history"]');
+      await until(() => refDoc.querySelectorAll('.library-item').length > 2, 'mixed history loaded');
+      const historyRatios = [...refDoc.querySelectorAll('.library-item')].map(elementRatio);
+      assert(historyRatios.some(ratio => Math.abs(ratio - 1) < 0.01) && historyRatios.some(ratio => Math.abs(ratio - 832 / 1216) < 0.01), '歷史縮圖使用各自生成尺寸，不強制套用目前尺寸');
+      refClick('#libraryDrawer [data-close-drawer]');
+      const modelChange = (selector, value) => {
+        const input = ref$(selector);
+        if (typeof value === 'boolean') input.checked = value;
+        else input.value = value;
+        input.dispatchEvent(new refWin.Event('input', { bubbles: true }));
+      };
+      const models = [
+        ['nai-diffusion-5-full', 'v5'], ['nai-diffusion-5-curated', 'v5'],
+        ['nai-diffusion-4-5-full', 'v4.5'], ['nai-diffusion-4-5-curated', 'v4.5'],
+        ['nai-diffusion-4-full', 'v4'], ['nai-diffusion-4-curated-preview', 'v4'],
+        ['nai-diffusion-3', 'v3'], ['nai-diffusion-furry-3', 'v3']
+      ];
+      assert(ref$('#generationModel').options.length === 8, '模型選單列出八個目前模型');
+      for (const [model, family] of models) {
+        modelChange('#generationModel', model);
+        assert(ref$('#vibePanel').hidden === (family === 'v5') && ref$('#precisePanel').hidden === (family !== 'v4.5')
+          && ref$('[data-capability="decrisp"]').hidden === (family !== 'v3')
+          && ref$('[data-capability="smea"]').hidden === (family !== 'v3')
+          && ref$('[data-capability="legacyUc"]').hidden === (family !== 'v4'), model + ' 只顯示相容設定與內容工具');
+      }
+      modelChange('#generationSmeaDyn', true);
+      modelChange('#generationModel', 'nai-diffusion-5-full');
+      assert(ref$('#generationSmeaDyn').checked && ref$('#generationSmeaDyn').disabled && ref$('#vibePanel').hidden, '切換 V5 隱藏並停用舊模型開關，不刪除偏好');
+      modelChange('#generationModel', 'nai-diffusion-3');
+      assert(ref$('#generationSmeaDyn').checked && !ref$('#generationSmeaDyn').disabled, '切回 V3 恢復舊模型開關');
+      modelChange('#generationSmeaDyn', false);
+      modelChange('#generationModel', 'nai-diffusion-4-5-full');
+      refClick('[data-panel="content"]');
+      const uploadTool = async (kind, files) => {
+        const panel = kind === 'vibes' ? '#vibePanel' : '#precisePanel';
+        const transfer = new refWin.DataTransfer();
+        for (const [blob, name, type = 'image/png'] of files) transfer.items.add(new refWin.File([blob], name, { type }));
+        const input = ref$(panel + ' [data-tool-upload]');
+        input.files = transfer.files;
+        input.dispatchEvent(new refWin.Event('change', { bubbles: true }));
+        await until(() => !ref$(panel + ' [data-tool-upload]').disabled, kind + ' saved');
+      };
+      const toolChange = async (selector, value) => {
+        const previous = data.otherStates.get('referenceTools');
+        const input = ref$(selector);
+        if (typeof value === 'boolean') input.checked = value;
+        else input.value = value;
+        input.dispatchEvent(new refWin.Event('input', { bubbles: true }));
+        if (input.type === 'range') assert(input.parentElement.querySelector('output').value === Number(value).toFixed(2), '參考工具滑桿即時更新數值');
+        input.dispatchEvent(new refWin.Event('change', { bubbles: true }));
+        await until(() => data.otherStates.get('referenceTools') !== previous, 'tool setting saved');
+      };
+      await uploadTool('vibes', [[sourceImage, 'vibe-one.png']]);
+      assert(data.otherStates.get('referenceTools').vibes.enabled && ref$('#vibesEnabled').checked && ref$('#vibePanel [data-tool-encode]').textContent.includes('2 Anlas'), 'Vibe 上傳只保存本機，顯示需付費編碼');
+      await uploadTool('vibes', [[new Blob(['broken']), 'broken.png']]);
+      assert(data.otherStates.get('referenceTools').vibes.images.length === 1 && ref$('#statusText').classList.contains('is-error'), 'Vibe 損壞圖不覆蓋已有圖片');
+      await uploadTool('vibes', Array.from({ length: 16 }, (_, i) => [sourceImage, 'extra-' + i + '.png']));
+      assert(data.otherStates.get('referenceTools').vibes.images.length === 1, '超過十六張 Vibe 時整次上傳拒絕，不留下部分圖片');
+      refWin.confirm = () => false;
+      refClick('#vibePanel [data-tool-encode]');
+      assert(!data.encodings?.length, '取消編碼費用確認不呼叫 API');
+      refWin.confirm = () => true;
+      refClick('#vibePanel [data-tool-encode]');
+      await until(() => ref$('#vibePanel [data-tool-encode]').disabled && data.encodings?.length === 1, 'first encoding saved');
+      const encodedKey = 'nai-diffusion-4-5-full:1';
+      assert(data.otherStates.get('referenceTools').vibes.images[0].encodings[encodedKey] === 'dGVzdC12aWJl', 'Vibe 成功編碼保存至本機快取');
+      await toolChange('#vibePanel [data-reference-id] [data-tool-field="strength"]', 0.3);
+      assert(ref$('#vibePanel [data-tool-encode]').disabled && data.encodings.length === 1, '改 Strength 不需要重新編碼');
+      await toolChange('#vibePanel [data-reference-id] [data-tool-field="informationExtracted"]', 0.4);
+      assert(!ref$('#vibePanel [data-tool-encode]').disabled, '改 Information Extracted 需要新編碼');
+      refClick('#vibePanel [data-tool-encode]');
+      await until(() => ref$('#vibePanel [data-tool-encode]').disabled && data.encodings.length === 2, 'second encoding saved');
+      await reloadReferenceFrame();
+      assert(ref$('#generationModel').value === 'nai-diffusion-4-5-full' && data.otherStates.get('referenceTools').vibes.images[0].blob.size > 0 && data.otherStates.get('referenceTools').vibes.images[0].encodings[encodedKey] && ref$('#vibePanel [data-tool-encode]').disabled, '重開保留模型、Vibe 圖片、參數與多組編碼快取');
+      const vibeRequestStart = data.requests.length;
+      refClick('#ignoreBatchButton');
+      await until(() => data.pending, 'V4.5 vibe batch started');
+      const vibeSnapshot = structuredClone(data.state.batchReferences);
+      assert(vibeSnapshot.vibes[0].image === 'dGVzdC12aWJl' && data.requests.at(-1).generationSettings.model === 'nai-diffusion-4-5-full', 'V4.5 批次共用預先編碼的 Vibe 快照');
+      await answer();
+      await until(() => data.pending, 'second vibe request');
+      modelChange('#generationModel', 'nai-diffusion-4-5-curated');
+      refClick('[data-panel="content"]');
+      await uploadTool('precise', [[sourceImage, 'precise-one.png']]);
+      assert(data.otherStates.get('referenceTools').precise.enabled && !data.otherStates.get('referenceTools').vibes.enabled && !ref$('#vibesEnabled').checked, '上傳 Precise 自動停用 Vibe，保留 Vibe 圖片與編碼');
+      await toolChange('#precisePanel [data-tool-field="type"]', 'character&style');
+      await toolChange('#precisePanel [data-tool-field="fidelity"]', 0.25);
+      const preciseBitmap = await refWin.createImageBitmap(data.otherStates.get('referenceTools').precise.images[0].blob);
+      const preciseCanvas = refDoc.createElement('canvas');
+      preciseCanvas.width = preciseBitmap.width; preciseCanvas.height = preciseBitmap.height;
+      preciseCanvas.getContext('2d').drawImage(preciseBitmap, 0, 0);
+      assert(preciseBitmap.width === 1536 && preciseBitmap.height === 1024 && [...preciseCanvas.getContext('2d').getImageData(0, 0, 1, 1).data].join(',') === '0,0,0,255', 'Precise 依原圖比例轉換成官方尺寸並補黑邊');
+      preciseBitmap.close();
+      refClick('#stopButton');
+      await until(() => !ref$('#generateButton').hidden, 'vibe stopped');
+      await reloadReferenceFrame();
+      assert(ref$('#generationModel').value === 'nai-diffusion-4-5-curated' && ref$('#preciseEnabled').checked && !ref$('#vibesEnabled').checked && data.state.batchReferences.vibes[0].image === vibeSnapshot.vibes[0].image, '重開同時保留下一批 Precise／Curated 與本批 Vibe／Full 快照');
+      refClick('#generateButton');
+      await answer(true);
+      for (let i = 0; i < 3; i++) await answer();
+      await until(() => !ref$('#generateButton').hidden, 'vibe failure retained');
+      refClick('.candidate.has-error [data-action="retry"]');
+      await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'vibe retry complete');
+      assert(data.requests.slice(vibeRequestStart).every(request => request.generationSettings.model === 'nai-diffusion-4-5-full' && JSON.stringify(request.references) === JSON.stringify(vibeSnapshot)) && data.encodings.length === 2, 'Vibe 五張、停止、重載與失敗重試始終共用原模型及編碼，不再編碼');
+      assert(data.state.currentBatch.every(candidate => candidate.referenceTools.vibes[0].fileName === 'vibe-one.png' && !candidate.request.parameters.reference_image_multiple && !JSON.stringify(candidate).includes('dGVzdC12aWJl')), 'Vibe 歷史與 metadata 只存摘要，不重複嵌入編碼');
+      const preciseRequestStart = data.requests.length;
+      refClick('#ignoreBatchButton');
+      await until(() => data.pending, 'precise batch started');
+      assert(data.requests.at(-1).generationSettings.model === 'nai-diffusion-4-5-curated' && data.requests.at(-1).references.precise[0].type === 'character&style' && data.requests.at(-1).references.precise[0].fidelity === 0.25, '下一批正確套用 Precise 類型、Fidelity 與 Curated 模型');
+      assert(ref$('#generationCost').textContent === '預估 25 Anlas', '一張 Precise 的五次單張生成預估 25 Anlas 附加費');
+      modelChange('#generationModel', 'nai-diffusion-5-full');
+      assert(ref$('#vibePanel').hidden && ref$('#precisePanel').hidden && data.otherStates.get('referenceTools').precise.images.length === 1, '切到 V5 內容維持現狀，隱藏參考工具但不刪素材');
+      assert(ref$('#nextBatchCost').textContent === '預估 0 Anlas' && ref$('#generationCost').textContent === '預估 25 Anlas', '切模型後下一批不計不支援參考，本批費用仍沿用 Precise 快照');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'precise batch complete');
+      assert(data.requests.slice(preciseRequestStart).every(request => request.generationSettings.model === 'nai-diffusion-4-5-curated' && request.references.precise.length === 1), '中途切 V5 不改變本批 Precise 與模型');
+      assert(data.state.currentBatch.every(candidate => candidate.request.parameters.director_reference_secondary_strength_values[0] === 0.75 && !candidate.request.parameters.director_reference_images && candidate.fixedSettings.model === 'NAI Diffusion V4.5 Curated'), 'Precise 摘要保留逆向 Fidelity 請求及真實模型，不存參考圖片');
+      const savedToolState = structuredClone(data.otherStates.get('referenceTools'));
+      refClick('#ignoreBatchButton');
+      await until(() => data.pending, 'back to V5 batch');
+      assert(data.requests.at(-1).generationSettings.model === 'nai-diffusion-5-full' && data.requests.at(-1).references === null && data.state.version === 4 && data.favorites.size === 2, '切回 V5 不傳不支援參考，保留演化版本與收藏');
+      refClick('#stopButton');
+      await until(() => !ref$('#generateButton').hidden, 'final batch stopped');
+      const balanceRequestCount = data.balanceRequests.length;
+      await until(() => data.balanceRequests.length > balanceRequestCount && !ref$('#anlasButton').disabled, 'automatic post-generation balance refresh');
+      assert(ref$('#anlasBalance').textContent === '166,125', '生成停止後自動刷新餘額，不影響本批卡牌');
+      data.balance = { total: 0, subscription: 0, purchased: 0 };
+      refClick('#anlasButton');
+      await until(() => !ref$('#anlasButton').disabled && ref$('#anlasBalance').textContent === '0', 'zero balance');
+      assert(ref$('#anlasWarning').hidden && !ref$('#generateButton').disabled, '真實零餘額顯示 0，不額外封鎖生成');
+      data.balanceError = true;
+      refClick('#anlasButton');
+      await until(() => !ref$('#anlasButton').disabled && !ref$('#anlasWarning').hidden, 'balance error');
+      assert(ref$('#anlasBalance').textContent === '0' && ref$('#anlasButton').title.includes('上次成功') && !ref$('#generateButton').disabled, '查詢失敗保留舊數字並標示非最新，不阻擋生成');
+      data.balanceError = false;
+      data.balance = { total: 15, subscription: 10, purchased: 5 };
+      refClick('#anlasButton');
+      await until(() => ref$('#anlasBalance').textContent === '15', 'manual retry');
+      assert(ref$('#anlasWarning').hidden, '手動重試成功後清除錯誤標記');
+      assert(ref$('#generationCost').textContent.includes('–'), '帳戶資格未知時外部費用顯示範圍，不由餘額數字猜測免費');
+      data.deferBalance = true;
+      refClick('#anlasButton');
+      await until(() => data.resolveBalance, 'deferred old account balance');
+      const resolveOldBalance = data.resolveBalance;
+      data.resolveBalance = null;
+      refClick('[data-panel="settings"]');
+      refClick('#clearTokenButton');
+      assert(ref$('#anlasBalance').textContent === '—' && ref$('#anlasWarning').hidden && !ref$('#anlasButton').disabled, '清除 Token 即刻清除舊帳戶餘額及載入狀態');
+      data.deferBalance = false;
+      ref$('#tokenInput').value = 'ui-test-new-account-token';
+      refClick('#saveTokenButton');
+      await until(() => ref$('#anlasBalance').textContent === '15' && !ref$('#anlasButton').disabled, 'new account balance');
+      resolveOldBalance({ total: 999, subscription: 999, purchased: 0 });
+      await pause(40);
+      assert(ref$('#anlasBalance').textContent === '15' && !ref$('#anlasButton').disabled, '舊請求遲到不會覆蓋新帳戶餘額');
+      refClick('#clearTokenButton');
+      refClick('#controlsDrawer [data-close-drawer]');
+      const beforeMissingToken = data.balanceRequests.length;
+      refClick('#anlasButton');
+      assert(ref$('#controlsDrawer').open && ref$('#tokenInput') === refDoc.activeElement && data.balanceRequests.length === beforeMissingToken, '未設定 Token 點餘額開啟設定，不呼叫 API');
+      data.balanceError = true;
+      ref$('#tokenInput').value = 'ui-test-new-account-token';
+      refClick('#saveTokenButton');
+      await until(() => !ref$('#anlasButton').disabled && !ref$('#anlasWarning').hidden, 'first balance request failure');
+      assert(ref$('#anlasBalance').textContent === '—' && ref$('#anlasButton').title.includes('尚未取得'), '首次查詢失敗顯示未知，不誤報零餘額');
+      data.balanceError = false;
+      refClick('#anlasButton');
+      await until(() => ref$('#anlasBalance').textContent === '15', 'balance recovers');
+      refClick('#controlsDrawer [data-close-drawer]');
+      await reloadReferenceFrame();
+      await until(() => ref$('#anlasBalance').textContent === '15', 'reload fetches balance');
+      assert(data.state.version === 4 && data.favorites.size === 2 && data.otherStates.get('referenceTools').precise.images.length === 1, '餘額刷新及換 Token 不清除演化、收藏或參考圖，重載重新查詢');
+      // Build a nonzero preference checkpoint with Image2Image and both saved reference tools.
+      refClick('[data-panel="settings"]');
+      modelChange('#generationModel', 'nai-diffusion-4-5-curated');
+      modelChange('#generationSeed', 12345);
+      refClick('[data-panel="content"]');
+      modelChange('#contentPrompt', 'savepoint content');
+      modelChange('#negativePrompt', 'savepoint negative');
+      modelChange('#seedStylePrompt', 'watercolor (medium), best quality');
+      await upload(sourceImage, 'savepoint-original.png');
+      await setReferenceParameter('#imageStrength', 'strength', 0.42);
+      await setReferenceParameter('#imageNoise', 'noise', 0.12);
+      refClick('[data-panel="style"]');
+      const pinnedInput = ref$('.style-row [data-style-field="pinned"]');
+      const pinnedTag = pinnedInput.closest('.style-row').dataset.tag;
+      pinnedInput.checked = true;
+      pinnedInput.dispatchEvent(new refWin.Event('change', { bubbles: true }));
+      refClick('#controlsDrawer [data-close-drawer]');
+      refClick('#generateButton');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'old batch completed before checkpoint');
+      refClick('#ignoreBatchButton');
+      await until(() => data.pending, 'full checkpoint request');
+      const checkpointRequest = structuredClone(data.requests.at(-1));
+      const pointId = data.state.currentBatch[0].savePointId;
+      const checkpoint = structuredClone(data.savepoints.get(pointId));
+      assert(Object.keys(checkpoint.stats).length > 0 && checkpoint.image2Image.originalBlob instanceof Blob && checkpoint.referenceTools.vibes.images.length === 1 && checkpoint.referenceTools.precise.images.length === 1, '完整儲存點包含非零分數、Image2Image 原圖、Vibe／Precise 圖片及編碼');
+      await answer();
+      await until(() => data.images.has(data.state.currentBatch[0].id) && !ref$('.candidate [data-action="favorite"]').disabled, 'checkpoint image and thumbnail ready');
+      const checkpointImage = structuredClone(data.images.get(data.state.currentBatch[0].id));
+      refClick('.candidate [data-action="favorite"]');
+      await until(() => data.favorites.size === 3 && !ref$('.candidate [data-action="favorite"]').disabled, 'checkpoint favorited');
+      refClick('[data-drawer-library="favorites"]');
+      await until(() => ref$('[data-library-id="' + checkpointImage.id + '"]'), 'checkpoint in library');
+      assert(ref$('[data-library-id="' + checkpointImage.id + '"] [data-restore-savepoint]').disabled, '生成中不能載入收藏儲存點');
+      refClick('#libraryDrawer [data-close-drawer]');
+      refClick('#stopButton');
+      await until(() => !ref$('#generateButton').hidden, 'checkpoint batch stopped');
+      refClick('[data-panel="content"]');
+      modelChange('#contentPrompt', 'changed after checkpoint');
+      modelChange('#negativePrompt', 'changed negative');
+      await upload(sourceImage, 'changed-reference.png');
+      await setReferenceParameter('#imageStrength', 'strength', 0.9);
+      await toolChange('#precisePanel [data-tool-field="fidelity"]', 0.1);
+      refClick('[data-panel="style"]');
+      const pinToClear = [...refDoc.querySelectorAll('.style-row')].find(row => row.dataset.tag === pinnedTag).querySelector('[data-style-field="pinned"]');
+      pinToClear.checked = false;
+      pinToClear.dispatchEvent(new refWin.Event('change', { bubbles: true }));
+      refClick('[data-panel="settings"]');
+      modelChange('#generationModel', 'nai-diffusion-3');
+      modelChange('#generationSeed', 98765);
+      refClick('#controlsDrawer [data-close-drawer]');
+      refClick('#generateButton');
+      for (let i = 1; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'checkpoint batch finished');
+      refClick('#ignoreBatchButton');
+      await until(() => data.pending, 'different branch');
+      refClick('#stopButton');
+      await until(() => !ref$('#generateButton').hidden, 'different branch stopped');
+      const differentState = JSON.stringify(data.state);
+      const differentSettings = data.local.get('novelai_style_evolver_settings');
+      const beforeRestoreRequests = data.requests.length;
+      const checkpointSelector = '[data-library-id="' + checkpointImage.id + '"] [data-restore-savepoint]';
+      refClick('[data-drawer-library="favorites"]');
+      await until(() => ref$(checkpointSelector) && !ref$(checkpointSelector).disabled, 'restore button ready');
+      refWin.confirm = () => false;
+      refClick(checkpointSelector);
+      assert(JSON.stringify(data.state) === differentState && data.requests.length === beforeRestoreRequests, '取消載入不改變分數、批次或發出生成請求');
+      refWin.confirm = () => true;
+      data.failRestore = true;
+      refClick(checkpointSelector);
+      await until(() => !ref$(checkpointSelector).disabled && ref$('#statusText').textContent.includes('交易失敗'), 'failed restore');
+      assert(JSON.stringify(data.state) === differentState && data.local.get('novelai_style_evolver_settings') === differentSettings && data.otherStates.get('image2image').fileName === 'changed-reference.png', '還原儲存失敗時回滾設定，探索與參考圖仍是原狀');
+      data.failRestore = false;
+      data.savepoints.delete(pointId);
+      refClick(checkpointSelector);
+      await until(() => !ref$(checkpointSelector).disabled && ref$('#statusText').textContent.includes('缺失'), 'missing checkpoint');
+      assert(JSON.stringify(data.state) === differentState, '快照缺失不套用目前分數或不完整設定');
+      data.savepoints.set(pointId, checkpoint);
+      refClick(checkpointSelector);
+      refClick(checkpointSelector);
+      await until(() => !ref$('#libraryDrawer').open && !ref$('#generateButton').disabled, 'checkpoint restored');
+      assert(data.restoreCalls === 1 && data.requests.length === beforeRestoreRequests && !data.state.currentBatch.length, '連點只載入一次，還原不自動生成或付費編碼');
+      assert(JSON.stringify(data.state.stats) === JSON.stringify(checkpoint.stats) && data.state.votes.length === checkpoint.votes.length && data.state.batchNumber === checkpoint.batchNumber + 1 && data.state.parents[0].id === checkpointImage.genome.id, '分數與投票回到儲存點，以收藏畫風作唯一父基因並接下一批');
+      assert(ref$('#contentPrompt').value === 'savepoint content' && ref$('#negativePrompt').value === 'savepoint negative' && ref$('#seedStylePrompt').value === checkpoint.settings.seedStylePrompt && ref$('#generationModel').value === 'nai-diffusion-4-5-curated' && ref$('#generationSeed').value === '12345', '全部 Prompt、初始風格、模型與數值設定一起還原');
+      assert(data.otherStates.get('image2image').fileName === 'savepoint-original.png' && data.otherStates.get('image2image').strength === 0.42 && data.otherStates.get('image2image').originalBlob.size === sourceImage.size && data.otherStates.get('referenceTools').precise.images[0].fidelity === checkpoint.referenceTools.precise.images[0].fidelity && JSON.parse(data.local.get('novelai_style_evolver_style_overrides'))[pinnedTag].pinned, 'Image2Image 原圖／參數、Precise、Vibe 編碼與風格池設定完整還原');
+      await reloadReferenceFrame();
+      assert(JSON.stringify(data.state.stats) === JSON.stringify(checkpoint.stats) && ref$('#generationSeed').value === '12345' && ref$('#imageStrength').value === '0.42' && ref$('#referenceInfo').textContent.includes('savepoint-original.png'), '重新開啟保留已載入的完整儲存點狀態');
+      refClick('#generateButton');
+      await until(() => data.pending, 'restored next generation');
+      const resumedRequest = data.requests.at(-1);
+      assert(data.state.currentBatch.every(item => JSON.stringify(item.genome.styleTerms) === JSON.stringify(parseStylePrompt(checkpoint.settings.seedStylePrompt))),
+        '儲存點還原後仍只抽畫師，質量詞使用儲存的欄位而非舊隨機風格');
+      assert(JSON.stringify(resumedRequest.generationSettings) === JSON.stringify(checkpointRequest.generationSettings) && JSON.stringify(resumedRequest.image2Image) === JSON.stringify(checkpointRequest.image2Image) && JSON.stringify(resumedRequest.references) === JSON.stringify(checkpointRequest.references) && resumedRequest.prompt.includes('savepoint content') && resumedRequest.negativePrompt === 'savepoint negative', '從收藏繼續的實際下一批請求沿用全部模型、設定與參考圖');
+      await answer();
+      await until(() => data.images.has(data.state.currentBatch[0].id), 'resumed image saved');
+      refClick('#stopButton');
+      await until(() => !ref$('#generateButton').hidden, 'resumed batch stopped');
+      refClick('[data-drawer-library="history"]');
+      await until(() => ref$('.library-item [data-toggle-favorite]'), 'history favorite controls');
+      const historyImage = [...data.images.values()].find(item => !data.favorites.has(item.id));
+      const historyStar = '[data-library-id="' + historyImage.id + '"] [data-toggle-favorite]';
+      refClick(historyStar);
+      await until(() => data.favorites.has(historyImage.id) && ref$(historyStar)?.getAttribute('aria-pressed') === 'true', 'history favorited');
+      assert(data.favorites.get(historyImage.id).savePointId === historyImage.savePointId && JSON.stringify(data.state.stats) === JSON.stringify(checkpoint.stats), '歷史加入收藏沿用原儲存點、不改分');
+      refClick(historyStar);
+      await until(() => !data.favorites.has(historyImage.id) && ref$(historyStar)?.getAttribute('aria-pressed') === 'false', 'history unfavorited');
+      assert(data.images.has(historyImage.id), '歷史可直接取消收藏，保留圖片');
+      // Simulate a pre-upgrade favorite, then fill the UI to its allowed maximum.
+      const legacyFavorite = { ...checkpointImage, id: 'legacy-favorite', savePointId: undefined };
+      data.favorites.set(legacyFavorite.id, legacyFavorite);
+      refClick('[data-library="favorites"]');
+      await until(() => ref$('[data-library-id="legacy-favorite"]'), 'legacy favorite rendered');
+      assert(ref$('[data-library-id="legacy-favorite"] [data-restore-savepoint]').disabled && ref$('[data-library-id="legacy-favorite"] [data-restore-savepoint]').textContent.includes('舊紀錄'), '舊收藏缺少完整快照時明確停用繼續，不虛構還原');
+      refClick('[data-library-id="legacy-favorite"] [data-toggle-favorite]');
+      await until(() => !data.favorites.has('legacy-favorite'), 'legacy favorite removed');
+      while (data.favorites.size < 50) { const id = 'limit-favorite-' + data.favorites.size; data.favorites.set(id, { ...checkpointImage, id }); }
+      refClick('[data-library="history"]');
+      await until(() => ref$('[data-library="favorites"]').textContent.includes('50 / 50') && ref$(historyStar)?.disabled, 'favorite limit displayed');
+      assert(ref$(historyStar).disabled && ref$('.candidate [data-action="favorite"]').disabled, '收藏 50 / 50 時歷史及未收藏卡片均禁止新增');
+      refClick('[data-library-id="' + historyImage.id + '"] .library-preview');
+      assert(ref$('#previewFavorite').disabled && ref$('#previewFavorite').title.includes('50'), '放大预覽同樣遵守 50 張收藏上限');
+      refClick('#closeDialogButton');
+      await until(() => !ref$('#dialogImage').getAttribute('src'), 'limit preview closed');
+      refClick('[data-library-id="' + checkpointImage.id + '"] .library-preview');
+      assert(!ref$('#previewFavorite').disabled && ref$('#previewFavorite').getAttribute('aria-pressed') === 'true', '收藏滿額時仍可在預覽取消已有收藏');
+      refClick('#closeDialogButton');
+      await until(() => !ref$('#dialogImage').getAttribute('src'), 'favorited limit preview closed');
+      refClick('[data-library-id="' + checkpointImage.id + '"] [data-toggle-favorite]');
+      await until(() => data.favorites.size === 49 && !ref$(historyStar)?.disabled, 'favorite room freed');
+      refClick(historyStar);
+      await until(() => data.favorites.size === 50, 'favorite refilled');
+      assert(data.favorites.size === 50 && data.images.size <= 50, '取消後才能補入收藏，兩種資料均不超過 50 張');
+      refClick('[data-library="favorites"]');
+      await until(() => refDoc.querySelectorAll('.library-item').length === 50, 'full library layout');
+      const beforeLibraryWidth = frame.style.width;
+      for (const width of [1000, 760, 390, 320]) {
+        frame.style.width = width + 'px';
+        await pause(30);
+        assert(ref$('#libraryGrid').scrollWidth <= ref$('#libraryGrid').clientWidth && [...refDoc.querySelectorAll('.library-actions')].every(actions => {
+          const card = actions.closest('.library-item').getBoundingClientRect();
+          return [...actions.querySelectorAll('button')].every(button => { const rect = button.getBoundingClientRect(); return rect.left >= card.left && rect.right <= card.right; });
+        }), width + 'px 收藏操作及儲存點按鈕不溢出卡片');
+        const libraryCards = [...refDoc.querySelectorAll('.library-item')];
+        const grid = ref$('#libraryGrid');
+        grid.scrollTop = 0;
+        const columns = refWin.getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+        const beforeTop = libraryCards[columns].getBoundingClientRect().top;
+        libraryCards[0].dispatchEvent(new refWin.PointerEvent('pointerenter', { pointerType: 'mouse' }));
+        await pause(220);
+        const fullCard = libraryCards[0].getBoundingClientRect();
+        const afterTop = libraryCards[columns].getBoundingClientRect().top;
+        assert(libraryCards[0].classList.contains('is-library-expanded') && afterTop >= fullCard.bottom,
+          width + 'px 懸停展開完整圖片，下列退位而不遮住收藏操作');
+        libraryCards[0].dispatchEvent(new refWin.PointerEvent('pointerleave', { pointerType: 'mouse' }));
+        await pause(220);
+        assert(!libraryCards[0].classList.contains('is-library-expanded') && Math.abs(libraryCards[columns].getBoundingClientRect().top - beforeTop) < 1,
+          width + 'px 離開圖片後回到原疊放位置');
+        libraryCards[0].querySelector('.library-preview').focus({ preventScroll: true });
+        await pause(220);
+        assert(libraryCards[0].classList.contains('is-library-expanded') && libraryCards[columns].getBoundingClientRect().top >= libraryCards[0].getBoundingClientRect().bottom,
+          width + 'px 鍵盤聚焦也能展開完整圖片');
+        libraryCards[0].querySelector('.library-preview').blur();
+        await pause(220);
+      }
+      frame.style.width = beforeLibraryWidth;
+      refClick('#libraryDrawer [data-close-drawer]');
+      refClick('[data-panel="settings"]');
+      refClick('#resetButton');
+      await until(() => data.state && !data.state.currentBatch.length && !ref$('#generateButton').disabled, 'reset before quota test');
+      const beforeQuotaRequests = data.requests.length;
+      data.failCheckpoint = true;
+      refClick('#generateButton');
+      await until(() => !ref$('#generateButton').disabled && ref$('#statusText').textContent.includes('配額不足'), 'checkpoint quota failure');
+      assert(data.requests.length === beforeQuotaRequests && !data.state.currentBatch.length, '儲存點保存失敗不發送生成請求、不留下缺失快照批次');
+      data.failCheckpoint = false;
+      // Exercise the production IndexedDB adapter under a unique, disposable database name.
+      const databaseName = 'novelai_style_evolver_test_' + crypto.randomUUID();
+      const storageSource = await (await fetch(new URL('src/storage.js', root))).text();
+      const isolatedStorage = storageSource.replace('"novelai_style_evolver"', JSON.stringify(databaseName));
+      assert(isolatedStorage !== storageSource, 'IndexedDB 測試使用獨立名稱，不操作正式資料庫');
+      const firstStorageUrl = moduleUrl(isolatedStorage);
+      const secondStorageUrl = moduleUrl(isolatedStorage);
+      // Seed the previous database schema before opening the upgraded adapter.
+      await new Promise((resolve, reject) => {
+        const request = indexedDB.open(databaseName, 1);
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore('state');
+          request.result.createObjectStore('images', { keyPath: 'id' });
+          request.result.createObjectStore('favorites', { keyPath: 'id' });
+        };
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result;
+          const tx = database.transaction(['images', 'favorites'], 'readwrite');
+          tx.objectStore('images').put({ ...checkpointImage, id: 'legacy-db-image', savePointId: undefined });
+          tx.objectStore('favorites').put({ ...checkpointImage, id: 'legacy-db-favorite', savePointId: undefined });
+          tx.oncomplete = () => { database.close(); resolve(); };
+          tx.onerror = () => reject(tx.error);
+        };
+      });
+      let firstStorage;
+      let secondStorage;
+      try {
+        firstStorage = await import(firstStorageUrl);
+        assert((await firstStorage.openDatabase()).version === 2 && (await firstStorage.getImages()).length === 1 && (await firstStorage.getFavorites()).length === 1, '資料庫原地升級至 2，保留舊圖片與收藏');
+        await firstStorage.setState('image2image', { enabled: true, blob: sourceImage, originalBlob: new File([sourceImage], 'original.png', { type: 'image/png' }), fileName: 'saved.png', strength: 0.35, noise: 0.15 });
+        await firstStorage.setState('active', { batchNumber: 6, batchImage2Image: batchReference });
+        await firstStorage.setState('referenceTools', savedToolState);
+        const databasePoint = { ...checkpoint, id: 'saved-checkpoint' };
+        const databaseImage = { ...checkpointImage, id: 'saved-checkpoint-image', savePointId: databasePoint.id };
+        await firstStorage.saveBatchSavePoint(databasePoint, { batchNumber: 6, batchImage2Image: batchReference, currentBatch: [databaseImage] });
+        await firstStorage.saveImage(databaseImage);
+        await firstStorage.saveFavorite(databaseImage);
+        await firstStorage.saveBatchSavePoint({ ...checkpoint, id: 'recent-checkpoint' }, { batchNumber: 6, batchImage2Image: batchReference, currentBatch: [{ savePointId: 'recent-checkpoint' }] });
+        assert(await firstStorage.getSavePoint('recent-checkpoint'), '尚未生成圖片的批次仍保留其儲存點');
+        for (let i = 0; i < 55; i++) await firstStorage.saveImage({ ...databaseImage, id: 'recent-image-' + i, savePointId: 'recent-checkpoint', createdAt: new Date(Date.UTC(2099, 0, 1, 0, 0, i)).toISOString() });
+        const limitedHistory = await firstStorage.getImages();
+        assert(firstStorage.IMAGE_LIMIT === 50 && limitedHistory.length === 50 && !limitedHistory.some(item => item.id === databaseImage.id) && limitedHistory[0].id === 'recent-image-54', '儲存端只保留最新 50 張歷史，淘汰最舊圖片');
+        assert((await firstStorage.getFavorites()).some(item => item.id === databaseImage.id) && await firstStorage.getSavePoint(databasePoint.id), '歷史淘汰不刪除收藏及其完整儲存點');
+        await firstStorage.saveBatchSavePoint({ ...checkpoint, id: 'orphan-checkpoint' }, { batchNumber: 6, batchImage2Image: batchReference, currentBatch: [] });
+        await firstStorage.pruneSavePoints();
+        assert(await firstStorage.getSavePoint('orphan-checkpoint') === null && await firstStorage.getSavePoint('recent-checkpoint'), '未被圖片或批次引用的快照會清理，歷史快照保留');
+        for (let i = 0; i < 47; i++) await firstStorage.saveFavorite({ ...databaseImage, id: 'db-favorite-' + i, savePointId: undefined });
+        const simultaneous = await Promise.allSettled(['db-last-a', 'db-last-b'].map(id => firstStorage.saveFavorite({ ...databaseImage, id, savePointId: undefined })));
+        assert(firstStorage.FAVORITE_LIMIT === 50 && (await firstStorage.getFavorites()).length === 50 && simultaneous.filter(item => item.status === 'fulfilled').length === 1 && simultaneous.filter(item => item.status === 'rejected').length === 1, '同時新增收藏仍只允許第 50 張，拒絕第 51 張');
+        await firstStorage.saveFavorite(databaseImage);
+        assert((await firstStorage.getFavorites()).length === 50, '滿額仍可保存既有收藏，不新增重複紀錄');
+        (await firstStorage.openDatabase()).close();
+        secondStorage = await import(secondStorageUrl);
+        const savedReference = await secondStorage.getState('image2image');
+        const savedBatch = await secondStorage.getState('active');
+        assert(savedReference.blob instanceof Blob && savedReference.blob.size === sourceImage.size && savedReference.originalBlob instanceof Blob && savedReference.originalBlob.size === sourceImage.size && savedReference.strength === 0.35 && savedBatch.batchImage2Image.image === batchReference.image, '真實 IndexedDB 關閉重開後保留圖片 Blob、原圖、設定及批次快照');
+        const savedTools = await secondStorage.getState('referenceTools');
+        assert(savedTools.precise.images[0].blob instanceof Blob && savedTools.vibes.images[0].encodings[encodedKey] === 'dGVzdC12aWJl', '真實 IndexedDB 重開保留 Precise 圖片與 Vibe 編碼快取');
+        const persistedPoint = await secondStorage.getSavePoint(databasePoint.id);
+        assert(persistedPoint.image2Image.originalBlob instanceof Blob && JSON.stringify(persistedPoint.stats) === JSON.stringify(checkpoint.stats) && persistedPoint.referenceTools.precise.images[0].blob instanceof Blob, '真實 IndexedDB 重開後儲存點分數、原圖及全部參考圖仍完整');
+        const restoredActive = { version: 4, batchNumber: checkpoint.batchNumber + 1, stats: checkpoint.stats, currentBatch: [] };
+        await secondStorage.restoreExplorationState(restoredActive, checkpoint.image2Image, checkpoint.referenceTools);
+        let rejectedRestore = false;
+        try { await secondStorage.restoreExplorationState({ batchNumber: 999 }, { fileName: 'should-not-commit' }, { uncloneable: () => {} }); }
+        catch (error) { rejectedRestore = error.name === 'DataCloneError'; }
+        assert(rejectedRestore && (await secondStorage.getState('active')).batchNumber === restoredActive.batchNumber && (await secondStorage.getState('image2image')).fileName === 'savepoint-original.png', '還原交易任一寫入失敗時整套資料回滾，不混用新舊狀態');
+        await secondStorage.clearExplorationData();
+        assert(await secondStorage.getState('active') === null && (await secondStorage.getState('image2image')).fileName === 'savepoint-original.png', '真實 IndexedDB 重設探索只刪除進度，保留參考圖');
+        assert((await secondStorage.getState('referenceTools')).precise.images[0].fileName === 'precise-one.png', '真實 IndexedDB 重設探索保留 Vibe 與 Precise 工具');
+        assert(await secondStorage.getSavePoint('recent-checkpoint') === null && await secondStorage.getSavePoint(databasePoint.id), '重設清理歷史快照但保留收藏儲存點');
+        await secondStorage.deleteFavorite(databaseImage.id);
+        assert(await secondStorage.getSavePoint(databasePoint.id) === null && (await secondStorage.getFavorites()).length === 49, '取消已淘汰歷史的收藏後釋放其無引用快照');
+      } finally {
+        if (firstStorage) (await firstStorage.openDatabase()).close();
+        if (secondStorage) (await secondStorage.openDatabase()).close();
+        await new Promise((resolve, reject) => {
+          const request = indexedDB.deleteDatabase(databaseName);
+          request.onsuccess = resolve;
+          request.onerror = () => reject(request.error);
+        });
+        URL.revokeObjectURL(firstStorageUrl);
+        URL.revokeObjectURL(secondStorageUrl);
+      }
+      results.textContent += '\nALL PASSED — no real API or production browser data used.\n';
+    } catch (error) {
+      results.textContent += 'FAIL ' + error.message + '\n';
+      console.error(error);
+    }
+  });
+</script>
+</html>
