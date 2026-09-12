@@ -2,7 +2,7 @@
 
 # NovelAI 畫風探索
 
-![塔羅卡牌畫風探索介面](./%E8%9E%A2%E5%B9%95%E6%88%AA%E5%9C%96%202026-09-12%20%E4%B8%8B%E5%8D%8810.27.09.png)
+![塔羅卡牌畫風探索介面](./novelai-style-preview.png)
 
 [開始遊玩](https://nightsay2002.github.io/novelai-style-evolver/) · 作者：[時分](https://github.com/NightSay2002)
 
