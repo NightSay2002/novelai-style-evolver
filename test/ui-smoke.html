@@ -525,6 +525,12 @@
       await until(() => !$('.card-enter'), 'second deal finished');
       assert(secondBatchCards.every((card, index) => card === $('#candidateGrid').children[index]), '發牌結束不重建或重播卡片');
       assert(data.state.votes.length === 1 && data.state.parents.length === 2, '連點只投票一次，保留兩個父基因');
+      assert(data.state.currentBatch.slice(0, 3).every((candidate, index) => {
+        const parent = data.state.parents[index % data.state.parents.length];
+        return JSON.stringify(candidate.genome.artists) !== JSON.stringify(parent.artists)
+          && candidate.genome.artists.length >= parent.artists.length
+          && candidate.genome.artists.length <= Math.min(6, parent.artists.length + 1);
+      }), '下一批三張偏好延伸都有變動，未滿六位可新增，不縮減父組合');
       const likedDeltas = data.state.votes[0].selectedIds.map(id => data.state.votes[0].candidateDeltas[id]);
       assert(likedDeltas.length === 2 && likedDeltas.every(delta => delta === 1.5), '讚好與邊框選取按相同規則計分一次');
       assert(data.state.votes[0].dislikedIds.includes(rejectedId) && data.state.votes[0].candidateDeltas[rejectedId] === -3 && data.state.votes[0].candidateDeltas[neutralId] === -1, '明確不喜歡扣 3 分，普通未選扣 1 分');

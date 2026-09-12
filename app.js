@@ -4,7 +4,7 @@ import {
   makeInitialGenome,
   parseStylePrompt,
   serializeGenome
-} from "./src/evolution.js?v=10";
+} from "./src/evolution.js?v=11";
 import { classifyStylePool, STYLE_LAYERS } from "./src/style-taxonomy.js?v=1";
 import { availableNoiseSchedules, availableSamplers, buildNovelAiPayload, DEFAULT_GENERATION_SETTINGS, encodeNovelAiVibe, estimateNovelAiCost, fetchNovelAiAnlas, FIXED_SETTINGS, generateNovelAiImage, modelCapabilities, MODELS, NOISE_SCHEDULES, normalizeGenerationSettings, normalizeImageDimensions, SAMPLERS } from "./src/nai.js?v=10";
 import { injectCandidateMetadata } from "./src/png-metadata.js?v=6";

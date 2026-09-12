@@ -76,6 +76,120 @@ const stylePool = [
 
 const artists = Array.from({ length: 30 }, (_, index) => ({ tag: `artist:test_${index + 1}` }));
 
+test("three preference extensions change one artist or 1–2 weights and never shrink the preferred core", () => {
+  const rng = seededRandom(321);
+  const fixed = parseStylePrompt("best quality");
+  for (const count of [1, 3, 5, 6]) {
+    const parent = { id: "liked", artists: artists.slice(0, count).map(item => ({ ...item, weight: 1, polarity: "positive" })), styleTerms: fixed };
+    const before = structuredClone(parent);
+    let additions = 0;
+    for (let run = 0; run < 30; run++) {
+      const batch = generateBatch({ batchNumber: 20, parents: [parent], artistPool: artists, stylePool: [], categories: {}, fixedStyleTerms: fixed, rng });
+      for (const [index, genome] of batch.slice(0, 3).entries()) {
+        assert.ok(genome.artists.length >= count && genome.artists.length <= Math.min(6, count + 1));
+        assert.notDeepEqual(genome.artists, parent.artists);
+        assert.deepEqual(genome.styleTerms, fixed);
+        assert.equal(new Set(genome.artists.map(item => item.tag)).size, genome.artists.length);
+        const fresh = genome.artists.filter(item => !parent.artists.some(old => old.tag === item.tag));
+        if (index < 2) {
+          assert.equal(fresh.length, 1);
+          assert.equal(genome.artists.filter(item => parent.artists.some(old => old.tag === item.tag)).length, count - (genome.artists.length === count ? 1 : 0));
+          additions += genome.artists.length > count ? 1 : 0;
+        } else {
+          assert.deepEqual(genome.artists.map(item => item.tag), parent.artists.map(item => item.tag));
+          const changed = genome.artists.filter((item, position) => item.weight !== parent.artists[position].weight);
+          assert.ok(changed.length >= 1 && changed.length <= 2);
+          assert.ok(changed.every(item => Math.abs(item.weight - 1) <= 0.301));
+        }
+      }
+      assert.ok(batch[3].artists.filter(item => !parent.artists.some(old => old.tag === item.tag)).length >= 2);
+      assert.ok(batch[4].artists.every(item => !batch.slice(0, 4).some(other => other.artists.some(old => old.tag === item.tag))));
+      assert.equal(new Set(batch.map(genome => JSON.stringify(genome.artists))).size, 5);
+    }
+    assert.deepEqual(parent, before);
+    if (count < 6) assert.ok(additions > 0);
+    else assert.equal(additions, 0);
+  }
+});
+
+test("small pools and boundary weights still change preference cards while pins stay untouched", () => {
+  for (const weight of [0.1, 2]) {
+    const parent = { id: "small", artists: [{ ...artists[0], weight, polarity: "positive" }], styleTerms: [] };
+    for (const genome of generateBatch({ batchNumber: 2, parents: [parent], artistPool: artists.slice(0, 1), stylePool: [], categories: {}, fixedStyleTerms: [], rng: seededRandom(81) }).slice(0, 3)) {
+      assert.equal(genome.artists[0].tag, parent.artists[0].tag);
+      assert.notEqual(genome.artists[0].weight, weight);
+      assert.ok(genome.artists[0].weight >= 0.1 && genome.artists[0].weight <= 2);
+    }
+  }
+  const parent = { id: "pinned", artists: artists.slice(0, 6).map(item => ({ ...item, weight: 1.7, pinned: true })), styleTerms: [] };
+  const before = structuredClone(parent);
+  for (const genome of generateBatch({ batchNumber: 20, parents: [parent], artistPool: artists, stylePool: [], categories: {}, fixedStyleTerms: [], rng: seededRandom(97) })) assert.deepEqual(genome.artists, before.artists);
+  parent.artists.pop();
+  for (const genome of generateBatch({ batchNumber: 20, parents: [parent], artistPool: artists, stylePool: [], categories: {}, fixedStyleTerms: [], rng: seededRandom(98) }).slice(0, 3)) {
+    assert.equal(genome.artists.length, 6);
+    for (const pin of parent.artists) assert.deepEqual(genome.artists.find(item => item.tag === pin.tag), pin);
+  }
+});
+
+test("historical favorite artists have a real chance in a 52k pool without replacing the exploration slot", () => {
+  const pool = Array.from({ length: 52266 }, (_, index) => ({ tag: `artist:large_${index}` }));
+  const favorite = pool.at(-1).tag;
+  const parent = { id: "current", artists: pool.slice(0, 3).map(item => ({ ...item, weight: 1 })), styleTerms: [] };
+  const stats = { [`artist:${favorite}`]: { score: 20, appearances: 100 } };
+  const before = structuredClone(stats);
+  const rng = seededRandom(816);
+  let favorites = 0;
+  const newDirections = new Set();
+  for (let run = 0; run < 40; run++) {
+    const batch = generateBatch({ batchNumber: 20, parents: [parent], artistPool: pool, stylePool: [], categories: {}, fixedStyleTerms: [], stats, rng });
+    favorites += batch.slice(0, 2).filter(genome => genome.artists.some(item => item.tag === favorite)).length;
+    for (const item of batch[4].artists) newDirections.add(item.tag);
+  }
+  assert.ok(favorites > 20 && favorites < 65, `historical favorite appeared ${favorites} times`);
+  assert.ok(newDirections.size > 100);
+  assert.deepEqual(stats, before);
+});
+
+test("artist weight buckets influence new draws and local changes without eliminating new values", () => {
+  const parent = { id: "current", artists: [{ ...artists[0], weight: 1.4 }], styleTerms: [] };
+  const target = artists[1].tag;
+  const stats = {
+    [`artist:${target}`]: { score: 20, appearances: 100 },
+    [`artist-weight:${target}:+1.7`]: { score: 20, appearances: 100 },
+    [`artist-weight:${artists[0].tag}:+1.7`]: { score: 20, appearances: 100 }
+  };
+  const rng = seededRandom(188);
+  let learnedDraws = 0, targetDraws = 0, learnedTweaks = 0;
+  const otherWeights = new Set();
+  for (let run = 0; run < 100; run++) {
+    const batch = generateBatch({ batchNumber: 20, parents: [parent], artistPool: artists, stylePool: [], categories: {}, fixedStyleTerms: [], stats, rng });
+    for (const genome of batch.slice(0, 2)) {
+      const item = genome.artists.find(item => item.tag === target);
+      if (item) { targetDraws++; if (item.weight === 1.7) learnedDraws++; else otherWeights.add(item.weight); }
+    }
+    if (batch[2].artists[0].weight === 1.7) learnedTweaks++;
+  }
+  assert.ok(learnedDraws > targetDraws * 0.65 && learnedDraws < targetDraws);
+  assert.ok(learnedTweaks > 65 && learnedTweaks < 100);
+  assert.ok(otherWeights.size > 3);
+});
+
+test("artist-only preference extensions remain changing over 60 feedback rounds and force exploration on request", () => {
+  let parent = { id: "initial", artists: [], styleTerms: [] };
+  let stats = {};
+  const rng = seededRandom(129);
+  for (let round = 1; round <= 60; round++) {
+    const batch = generateBatch({ batchNumber: round, parents: [parent], artistPool: artists, stylePool: [], categories: {}, fixedStyleTerms: [], stats, rng });
+    if (parent.artists.length) for (const genome of batch.slice(0, 3)) assert.notDeepEqual(genome.artists, parent.artists);
+    const candidates = batch.map((genome, index) => ({ id: `${round}-${index}`, genome }));
+    stats = applyBatchVote(stats, candidates, [candidates[round % 3].id]).stats;
+    parent = batch[round % 3];
+    assert.ok(parent.artists.length >= 1 && parent.artists.length <= 6);
+  }
+  const forced = generateBatch({ batchNumber: 61, parents: [parent], artistPool: artists, stylePool: [], categories: {}, fixedStyleTerms: [], stats, forceExplore: true, rng });
+  for (const genome of forced) assert.ok(genome.artists.every(item => !parent.artists.some(old => old.tag === item.tag)));
+});
+
 test("artist-only batches preserve exact manual quality terms through inheritance, crossover and exploration", () => {
   const fixed = parseStylePrompt("-2::artist collaboration::, year 2025, year 2026, {{{detail background}}}, 0.3::watercolor::, 1.7::best quality::");
   const original = structuredClone(fixed);

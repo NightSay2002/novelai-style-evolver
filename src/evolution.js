@@ -276,8 +276,32 @@ function canAddStyle(item, current, categories) {
   return (counts[item.category] || 0) < maximum && !current.some((value) => value.tag === item.tag);
 }
 
-function createArtist(tag, rng) {
-  return { tag, category: "artist", polarity: "positive", ...drawWeight(rng) };
+function preferredWeight(tag, weights, stats, rng) {
+  const choices = weights.map((weight) => ({ tag, weight, polarity: "positive" }));
+  const liked = choices.filter((item) => scoreFor(stats, bucketKey("artist", item)) > 0);
+  return weightedPick(liked.length && rng() < 0.7 ? liked : choices,
+    (item) => Math.exp(clamp(scoreFor(stats, bucketKey("artist", item)) / 5, -3, 3)), rng).weight;
+}
+
+function createArtist(tag, rng, stats = null) {
+  const weights = Array.from({ length: 20 }, (_, index) => (index + 1) / 10);
+  const remembered = stats && weights.some((weight) => stats[bucketKey("artist", { tag, weight, polarity: "positive" })]);
+  const weight = remembered ? preferredWeight(tag, weights, stats, rng) : drawWeight(rng).weight;
+  return { tag, category: "artist", polarity: "positive", weight };
+}
+
+function pickArtist(items, stats, explore, rng, preferred = false) {
+  // Give remembered favorites their own chance, rather than diluting them
+  // among tens of thousands of unseen artists. Exploration stays unrestricted.
+  const liked = preferred && !explore ? items.filter((item) => scoreFor(stats, itemKey("artist", item)) > 0) : [];
+  return weightedPick(liked.length && rng() < 0.5 ? liked : items,
+    (item) => poolWeight(item, "artist", stats, explore), rng);
+}
+
+function changeArtistWeight(item, stats, rng) {
+  const weights = Array.from({ length: 20 }, (_, index) => (index + 1) / 10)
+    .filter((weight) => Math.abs(weight - item.weight) > 0.001 && Math.abs(weight - item.weight) <= 0.301);
+  return { ...item, weight: preferredWeight(item.tag, weights, stats, rng) };
 }
 
 function createStyle(item, rng) {
@@ -301,7 +325,7 @@ function shuffled(items, rng) {
   return result;
 }
 
-function fillArtists(parent, targetCount, artistPool, stats, mode, excluded, rng) {
+function fillArtists(parent, targetCount, artistPool, stats, mode, excluded, rng, preferred = false) {
   const pinned = parent.artists.filter((item) => item.pinned);
   const mutable = parent.artists.filter((item) => !item.pinned);
   const slots = Math.max(0, targetCount - pinned.length);
@@ -312,12 +336,33 @@ function fillArtists(parent, targetCount, artistPool, stats, mode, excluded, rng
   while (artists.length < targetCount) {
     const available = artistPool.filter((item) => !artists.some((value) => value.tag === item.tag));
     const fresh = available.filter((item) => !excluded.has(item.tag));
-    const source = weightedPick(fresh.length ? fresh : available,
-      (item) => poolWeight(item, "artist", stats, mode === "explore"), rng);
+    const source = pickArtist(fresh.length ? fresh : available, stats, mode === "explore", rng, preferred);
     if (!source) break;
-    artists.push(createArtist(source.tag, rng));
+    artists.push(createArtist(source.tag, rng, preferred ? stats : null));
   }
   return artists.slice(0, 6);
+}
+
+function extendArtists(parent, artistPool, stats, excluded, index, rng) {
+  const artists = parent.artists.map((item) => ({ ...item }));
+  const mutable = artists.filter((item) => !item.pinned);
+  const available = artistPool.filter((item) => !excluded.has(item.tag) && !artists.some((value) => value.tag === item.tag));
+  if (available.length && (artists.length < 6 || mutable.length) && (index < 2 || !mutable.length)) {
+    const source = pickArtist(available, stats, false, rng, true);
+    const added = createArtist(source.tag, rng, stats);
+    if (artists.length < 6 && (!mutable.length || rng() < 0.45)) artists.push(added);
+    else if (mutable.length) {
+      const replaced = weightedPick(mutable,
+        (item) => Math.exp(-clamp(scoreFor(stats, itemKey("artist", item)) / 5, -3, 3)), rng);
+      artists[artists.indexOf(replaced)] = added;
+    }
+    return artists;
+  }
+  // Weight changes exclude the current value, including at 0.1 and 2.0.
+  for (const item of shuffled(mutable, rng).slice(0, mutable.length ? randomInt(1, Math.min(2, mutable.length), rng) : 0)) {
+    artists[artists.indexOf(item)] = changeArtistWeight(item, stats, rng);
+  }
+  return artists;
 }
 
 function changeOneStyle(styles, stylePool, categories, stats, rng) {
@@ -477,13 +522,15 @@ export function generateBatch({
   const parentArtists = new Set(parents.flatMap((parent) => parent.artists.map((item) => item.tag)));
   const parentStyles = new Set(parents.flatMap((parent) => parent.styleTerms.map((item) => item.tag)));
   for (let index = 0; index < 5; index += 1) {
-    const mode = forceExplore ? "explore" : index === 0 ? "conservative" : index < 3 ? "balanced" : "explore";
+    const mode = forceExplore ? "explore" : fixed
+      ? index < 3 ? "conservative" : index === 3 ? "balanced" : "explore"
+      : index === 0 ? "conservative" : index < 3 ? "balanced" : "explore";
     const explore = mode === "explore";
     let attempts = 0;
     let genome;
     do {
       const parent = parents[index % parents.length];
-      const otherParent = index === 2 && parents.length > 1 ? parents[(index + 1) % parents.length] : null;
+      const otherParent = index === (fixed ? 3 : 2) && parents.length > 1 ? parents[(index + 1) % parents.length] : null;
       genome = otherParent
         ? crossover(fixed ? { ...parent, styleTerms: [] } : parent,
           fixed ? { ...otherParent, styleTerms: [] } : otherParent, categories, rng)
@@ -493,17 +540,20 @@ export function generateBatch({
       if (batchNumber >= 8 && explore && rng() < 0.1) [artistMin, artistMax] = [1, 2];
       const targetCount = randomInt(artistMin, artistMax, rng);
       const excludedArtists = new Set(parentArtists);
+      if (fixed && mode === "conservative") for (const result of results) for (const item of result.artists) excludedArtists.add(item.tag);
       if (explore) for (const result of results) for (const item of result.artists) excludedArtists.add(item.tag);
-      genome.artists = fillArtists(genome, targetCount, artistPool, stats, mode, excludedArtists, rng);
-      if (mode === "conservative") {
+      genome.artists = fixed && mode === "conservative" && parent.artists.length
+        ? extendArtists(parent, artistPool, stats, excludedArtists, index, rng)
+        : fillArtists(genome, targetCount, artistPool, stats, mode, excludedArtists, rng, fixed);
+      if (mode === "conservative" && !fixed) {
         const mutable = genome.artists.map((item, position) => ({ item, position })).filter(({ item }) => !item.pinned);
         const target = pick(mutable, rng);
         if (target) genome.artists[target.position] = mutateWeight(target.item, rng);
-        if (!fixed) changeOneStyle(genome.styleTerms, stylePool, categories, stats, rng);
+        changeOneStyle(genome.styleTerms, stylePool, categories, stats, rng);
       }
       genome.styleTerms = fixed ? structuredClone(fixedStyleTerms)
         : recomposeStyles(genome.styleTerms, stylePool, categories, stats, mode, parentStyles, rng);
-      if (batchNumber <= 2) {
+      if (batchNumber <= 2 && (!fixed || !parent.artists.length)) {
         const used = new Set(results.flatMap((result) => result.artists.map((item) => item.tag)));
         genome.artists = genome.artists.map((item) => {
           if (item.pinned || !used.has(item.tag)) return item;
