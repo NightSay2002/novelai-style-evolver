@@ -88,7 +88,7 @@ async function pruneInTransaction(store, tx) {
     requestResult(store.getAllKeys()), requestResult(tx.objectStore("images").getAll()),
     requestResult(tx.objectStore("favorites").getAll()), requestResult(tx.objectStore("state").get("active"))
   ]);
-  const keep = new Set([...images, ...favorites, ...(active?.currentBatch || [])].map((item) => item.savePointId).filter(Boolean));
+  const keep = new Set([...images, ...favorites, ...(active?.currentBatch || []), ...(active?.baseline ? [active.baseline] : [])].map((item) => item.savePointId).filter(Boolean));
   for (const key of keys) if (!keep.has(key)) store.delete(key);
 }
 

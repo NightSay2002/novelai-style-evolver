@@ -337,3 +337,28 @@ dialog::backdrop { background: #07070c80; backdrop-filter: blur(5px); }
 }
 .style-layer-label { display: block; font-size: 10px; color: #a49abb; margin-top: 2px; }
 #styleLayerFilter { margin-top: 8px; }
+/* Comparison tools stay compact; the five generated images keep the stage. */
+.baseline-panel { display: flex; align-items: center; gap: 10px; max-width: 340px; margin-left: auto; padding: 6px 12px; border: 1px solid #bba2ef45; border-radius: 12px; background: #191522a8; }
+.baseline-panel strong { font-size: 12px; color: #ddcdf9; }
+.baseline-panel p { font-size: 11px; line-height: 1.4; margin: 3px 0 0; color: #aaa1b5; }
+#baselinePreview { flex: 0 0 auto; padding: 0; width: 40px; height: 52px; overflow: hidden; border-radius: 5px; }
+#baselineImage { width: 100%; height: 100%; object-fit: contain; }
+.candidate-strategy { display: flex; align-items: center; justify-content: space-between; gap: 4px; position: relative; z-index: 2; margin: 5px 0; min-width: 0; }
+.candidate-role { color: #b4a4cc; font-size: 10px; white-space: nowrap; }
+.promote-button { pointer-events: auto; font-size: 10px; padding: 4px 6px; min-height: 25px; border: 1px solid #bda3ea55; border-radius: 6px; color: #cec0ed; background: #21182c; }
+.promote-button[aria-pressed="true"] { background: #c8b2f0; color: #22162e; box-shadow: 0 0 12px #c6a5ff55; }
+.ranking-scroll { overflow-x: auto; }
+.ranking-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.ranking-table th, .ranking-table td { padding: 10px 6px; border-bottom: 1px solid #a893cb22; text-align: left; }
+.ranking-table th { color: #c9b5e8; font-weight: 500; white-space: nowrap; }
+.ranking-table td:nth-child(2) { overflow-wrap: anywhere; }
+.ranking-table td:last-child { white-space: nowrap; color: #b8a9cc; }
+@media (max-width: 800px) {
+  .baseline-panel { max-width: 210px; padding: 5px 8px; }
+  .baseline-panel p { max-width: 135px; font-size: 10px; }
+  .batch-toolbar .batch-progress { display: none; }
+}
+@media (max-width: 440px) {
+  .baseline-panel { max-width: 180px; }
+  #baselinePreview { width: 30px; height: 42px; }
+}

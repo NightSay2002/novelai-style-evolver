@@ -1,10 +1,9 @@
 import {
-  applyBatchVote,
-  generateBatch,
   makeInitialGenome,
   parseStylePrompt,
   serializeGenome
 } from "./src/evolution.js?v=11";
+import { applyPreferenceVote, CANDIDATE_ROLES, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceRanking, sameContext } from "./src/preference.js?v=1";
 import { classifyStylePool, STYLE_LAYERS } from "./src/style-taxonomy.js?v=1";
 import { availableNoiseSchedules, availableSamplers, buildNovelAiPayload, DEFAULT_GENERATION_SETTINGS, encodeNovelAiVibe, estimateNovelAiCost, fetchNovelAiAnlas, FIXED_SETTINGS, generateNovelAiImage, modelCapabilities, MODELS, NOISE_SCHEDULES, normalizeGenerationSettings, normalizeImageDimensions, SAMPLERS } from "./src/nai.js?v=10";
 import { injectCandidateMetadata } from "./src/png-metadata.js?v=6";
@@ -23,7 +22,7 @@ import {
   saveImage,
   setState,
   trimImages
-} from "./src/storage.js?v=6";
+} from "./src/storage.js?v=7";
 
 const TOKEN_SESSION_KEY = "novelai_style_evolver_token_session";
 const TOKEN_LOCAL_KEY = "novelai_style_evolver_token";
@@ -44,7 +43,7 @@ const elements = Object.fromEntries([
   "generationGuidance", "generationCfgRescale", "generationSettingsStatus", "generationModel", "modelSettingsHint",
   "generationNoiseSchedule", "generationVarietyPlus", "generationDecrisp", "generationSmea", "generationSmeaDyn", "generationAutoSmea", "generationLegacyUc",
   "vibePanel", "precisePanel",
-  "stylePoolList", "batchTitle", "progressText", "batchProgress", "candidateGrid",
+  "stylePoolList", "batchTitle", "progressText", "batchProgress", "candidateGrid", "baselinePreview", "baselineImage", "baselineHint", "rankingBody", "rankingHint",
   "selectionSummary", "generationCost", "nextBatchCost", "stopButton", "ignoreBatchButton", "dislikeAllButton", "submitVoteButton", "generateButton",
   "resetButton", "libraryGrid", "imageDialog", "closeDialogButton", "dialogImage", "dialogPrompt", "previewPrevious", "previewNext", "previewPosition", "previewFavorite",
   "controlsDrawer", "drawerTitle", "libraryDrawer", "libraryTitle", "reduceMotion", "backgroundMusic", "musicButton", "musicVolume"
@@ -65,10 +64,15 @@ let previewRecord = null;
 let previewUrl = null;
 let favoriteIds = new Set();
 let favoriteBusy = false;
+let baselineUrl = null;
+let baselineUrlId = null;
 let state = {
   version: STATE_VERSION,
   batchNumber: 1,
   stats: {},
+  learning: createLearning(),
+  baseline: null,
+  promotedId: null,
   parents: [],
   currentBatch: [],
   batchImage2Image: null,
@@ -695,12 +699,13 @@ function makeCard(candidate, index, animate) {
     </div></div>
     <div class="candidate-body">
       <div class="candidate-title"><span class="candidate-name">${icon("spark")}候選 ${String(index + 1).padStart(2, "0")}</span><span class="artist-count"></span></div>
+      <div class="candidate-strategy"><span class="candidate-role"></span><button type="button" class="promote-button" data-action="promote" aria-pressed="false" disabled>設為目前最佳</button></div>
       <div class="candidate-actions">
         <button type="button" class="prompt-button" data-action="details" disabled aria-label="候選 ${index + 1} 的完整 Prompt">Prompt ↗</button>
         <button type="button" class="retry-button" data-action="retry" hidden>重試</button>
         <button type="button" class="retry-button" data-action="image-retry" hidden>重載圖片</button>
         <button type="button" class="icon-button like-button" data-action="like" title="讚好 · 與點邊框選取相同" aria-label="讚好候選 ${index + 1}" aria-pressed="false" disabled>${icon("like")}</button>
-        <button type="button" class="icon-button dislike-button" data-action="dislike" title="不喜歡 · 提交時加強降低權重" aria-label="不喜歡候選 ${index + 1}" aria-pressed="false" disabled>${icon("dislike")}</button>
+        <button type="button" class="icon-button dislike-button" data-action="dislike" title="不喜歡 · −3；有讚好時建立較強比較" aria-label="不喜歡候選 ${index + 1}" aria-pressed="false" disabled>${icon("dislike")}</button>
         <button type="button" class="icon-button favorite-button" data-action="favorite" title="收藏 · 保存儲存點，不影響評分" aria-label="收藏候選 ${index + 1}" aria-pressed="false" disabled>${icon("star")}</button>
         <button type="button" class="icon-button" data-action="download" title="下載" aria-label="下載候選 ${index + 1}" disabled>${icon("download")}</button>
       </div>
@@ -761,6 +766,14 @@ function renderCandidates({ animate = false } = {}) {
       : candidate.status === "error" ? candidate.error || "生成失敗"
         : success ? "圖片載入中…" : "等待生成";
     card.querySelector(".artist-count").textContent = `${candidate.genome.artists.length} 位畫師`;
+    card.querySelector(".candidate-role").textContent = candidate.genome.mutation?.operation === "locked" ? "固定／候選不足"
+      : candidate.genome.mutation?.operation === "explore" && candidate.genome.role !== "explore" ? "初始探索" : CANDIDATE_ROLES[candidate.genome.role] || "舊批次";
+    const promoteButton = card.querySelector('[data-action="promote"]');
+    const promoted = state.promotedId === candidate.id;
+    promoteButton.textContent = promoted ? "提交時晉升 ✓" : sameContext(state.baseline, candidate) ? "比基準更好" : "設為目前最佳";
+    promoteButton.title = "提交後設為主要起點；讚好本身不會取代基準";
+    promoteButton.setAttribute("aria-pressed", String(promoted));
+    promoteButton.disabled = !success || generating || submitting;
     const selectButton = card.querySelector('[data-action="select"]');
     selectButton.setAttribute("aria-pressed", String(selected.has(candidate.id)));
     selectButton.setAttribute("aria-label", `${selected.has(candidate.id) ? "取消選取" : "選取"}候選 ${index + 1}`);
@@ -773,7 +786,7 @@ function renderCandidates({ animate = false } = {}) {
     const dislikeButton = card.querySelector('[data-action="dislike"]');
     dislikeButton.setAttribute("aria-pressed", String(disliked.has(candidate.id)));
     dislikeButton.setAttribute("aria-label", `${disliked.has(candidate.id) ? "取消不喜歡" : "不喜歡"}候選 ${index + 1}`);
-    dislikeButton.title = disliked.has(candidate.id) ? "取消不喜歡" : "不喜歡 · 提交時加強降低權重";
+    dislikeButton.title = disliked.has(candidate.id) ? "取消不喜歡" : "不喜歡 · −3；有讚好時建立較強比較";
     dislikeButton.disabled = !success || generating || submitting;
     for (const action of ["favorite", "download", "preview", "details"]) {
       card.querySelector(`[data-action="${action}"]`).disabled = !success || submitting;
@@ -792,7 +805,31 @@ function renderCandidates({ animate = false } = {}) {
     const url = objectUrls.get(candidate.id);
     if (url && image.getAttribute("src") !== url) image.src = url;
   });
+  renderBaseline();
+  if (elements.controlsDrawer.open && elements.controlsDrawer.dataset.panel === "ranking") renderRanking();
   updateControls();
+}
+
+function renderBaseline() {
+  const record = state.baseline;
+  if (baselineUrlId !== record?.id) {
+    if (baselineUrl) URL.revokeObjectURL(baselineUrl);
+    baselineUrl = record?.blob ? URL.createObjectURL(record.thumbnailBlob || record.blob) : null;
+    baselineUrlId = record?.id;
+    if (baselineUrl) elements.baselineImage.src = baselineUrl;
+    else elements.baselineImage.removeAttribute("src");
+  }
+  elements.baselinePreview.hidden = !baselineUrl;
+  elements.baselineHint.textContent = !record ? "讚好用於學習；另選一張設為最佳起點。"
+    : state.currentBatch.length && !sameContext(record, state.currentBatch[0]) ? "不同生成設定 · 僅供參考，不計勝負"
+      : "保留此起點，直到你選出更好的圖。";
+}
+
+function renderRanking() {
+  const ranking = preferenceRanking(state.learning);
+  elements.rankingHint.textContent = ranking.length ? `已學習 ${state.learning.rounds} 輪有效比較。分數為相對偏好，不是勝率；待確認的畫師尚未被充分區分。`
+    : "尚無可排名的比較。先讚好、比較基準，再提交；忽略不會產生勝負。";
+  elements.rankingBody.innerHTML = ranking.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.tag.replace(/^artist:/u, ""))}</td><td>${item.score.toFixed(1)}</td><td>${item.rounds}</td><td>${item.evidence}</td></tr>`).join("");
 }
 
 function updateControls() {
@@ -815,6 +852,9 @@ function updateControls() {
   elements.submitVoteButton.hidden = !completed;
   elements.dislikeAllButton.disabled = !completed || busy || !generationSettingsValid;
   elements.dislikeAllButton.hidden = !completed;
+  const comparable = sameContext(state.baseline, state.currentBatch[0]);
+  elements.dislikeAllButton.textContent = comparable ? "全部不喜歡 · 都不如基準" : "全部不喜歡";
+  elements.dislikeAllButton.title = comparable ? "五張各 −3；學習目前最佳勝過本批五張，保留起點" : "五張各 −3；沒有同設定基準，不捏造勝負，保留起點";
   elements.ignoreBatchButton.disabled = !completed || busy || !generationSettingsValid;
   elements.ignoreBatchButton.hidden = !completed;
   elements.stopButton.disabled = !generating || abortController?.signal.aborted;
@@ -911,12 +951,13 @@ async function prepareBatch() {
   const point = {
     id: uid("savepoint"), version: STATE_VERSION, createdAt: new Date().toISOString(),
     batchNumber: state.batchNumber, stats: structuredClone(state.stats), votes: structuredClone(state.votes),
+    learning: structuredClone(state.learning), baseline: structuredClone(state.baseline),
     settings, image2Image: reference, referenceTools: tools, styleOverrides: structuredClone(styleOverrides)
   };
-  const genomes = generateBatch({
-    batchNumber: state.batchNumber, parents: state.parents, artistPool, stylePool: [],
+  const genomes = generatePreferenceBatch({
+    batchNumber: state.batchNumber, parent: state.baseline?.genome || state.parents[0], artistPool,
     fixedStyleTerms: parseStylePrompt(settings.seedStylePrompt),
-    categories, stats: point.stats, forceExplore: state.forceExplore
+    learning: state.learning
   });
   saveSettings();
   const batchReferences = await snapshotReferenceTools(settings.generationSettings.model, tools);
@@ -927,10 +968,12 @@ async function prepareBatch() {
     strength: reference.strength,
     noise: reference.noise
   } : null;
+  const contextKey = await comparisonContext(settings, batchImage2Image, batchReferences);
+  point.contextKey = contextKey;
   const next = {
     ...state, batchReferences, batchImage2Image,
-    currentBatch: genomes.map((genome, index) => candidateRecord(genome, index, settings, batchImage2Image, batchReferences, point.id)),
-    selectedIds: [], dislikedIds: [], forceExplore: false
+    currentBatch: genomes.map((genome, index) => ({ ...candidateRecord(genome, index, settings, batchImage2Image, batchReferences, point.id), contextKey })),
+    selectedIds: [], dislikedIds: [], promotedId: null, forceExplore: false
   };
   await saveBatchSavePoint(point, next);
   state = next;
@@ -1012,40 +1055,39 @@ async function gatherCards(selectedIds) {
   await Promise.allSettled(animations.map((animation) => animation.finished));
 }
 
-async function submitVote(selectedIds, dislikedIds) {
+async function submitVote(selectedIds, dislikedIds, action = "vote") {
   const completed = state.currentBatch.length === 5 && state.currentBatch.every((item) => item.status === "success");
   if (!completed || generating || submitting || referenceBusy || !generationSettingsValid) return;
   submitting = true;
   renderCandidates();
-  await gatherCards(selectedIds);
-  const update = applyBatchVote(state.stats, state.currentBatch, selectedIds, dislikedIds);
-  state.stats = update.stats;
-  state.votes.push({
-    id: uid("vote"),
-    batchNumber: state.batchNumber,
-    batchId: state.currentBatch[0].batchId,
-    selectedIds,
-    dislikedIds,
-    candidateDeltas: update.candidateDeltas,
-    candidates: state.currentBatch.map(({ id, genome, prompt, negativePrompt }) => ({
-      id, genome, prompt, negativePrompt
-    })),
-    createdAt: new Date().toISOString()
-  });
-  if (selectedIds.length) {
-    state.parents = state.currentBatch.filter((item) => selectedIds.includes(item.id)).map((item) => item.genome);
-  } else {
-    state.forceExplore = true;
-  }
-  state.batchNumber += 1;
-  state.currentBatch = [];
-  state.batchImage2Image = null;
-  state.batchReferences = null;
-  state.selectedIds = [];
-  state.dislikedIds = [];
-  releaseCandidateUrls();
   try {
-    await persistState();
+    const promotedId = action === "vote" ? state.promotedId : null;
+    if (promotedId && !selectedIds.includes(promotedId)) selectedIds = [...selectedIds, promotedId];
+    const update = applyPreferenceVote(state.learning, state.currentBatch, selectedIds, dislikedIds, {
+      baseline: state.baseline, promotedId, action, eventId: state.currentBatch[0].id
+    });
+    let baseline = state.baseline;
+    if (promotedId) {
+      const record = currentImages.get(promotedId) || (await getImages()).find((item) => item.id === promotedId);
+      if (!record?.blob) throw new Error("找不到要晉升的圖片，偏好尚未提交，請重新載入。");
+      baseline = { ...record, contextKey: findCandidate(promotedId).contextKey, thumbnailBlob: await thumbnailFor(record, 160) };
+    }
+    const vote = {
+      id: uid("vote"), batchNumber: state.batchNumber, batchId: state.currentBatch[0].batchId,
+      selectedIds, dislikedIds, action, promotedId, candidateDeltas: update.candidateDeltas,
+      comparisonCount: update.comparisonCount,
+      candidates: state.currentBatch.map(({ id, genome, prompt, negativePrompt, contextKey }) => ({ id, genome, prompt, negativePrompt, contextKey })),
+      createdAt: new Date().toISOString()
+    };
+    const next = { ...state, learning: update.learning, baseline,
+      parents: baseline ? [structuredClone(baseline.genome)] : state.parents,
+      votes: [...state.votes, vote], batchNumber: state.batchNumber + 1, currentBatch: [],
+      batchImage2Image: null, batchReferences: null, selectedIds: [], dislikedIds: [], promotedId: null, forceExplore: false };
+    // Commit before replacing memory. A failed write must be safe to retry.
+    await setState("active", next);
+    await gatherCards(selectedIds);
+    state = next;
+    releaseCandidateUrls();
   } catch (error) {
     submitting = false;
     renderCandidates();
@@ -1066,7 +1108,7 @@ async function toggleFavorite(record) {
       const inHistory = (await getImages()).some((item) => item.id === record.id);
       await deleteFavorite(record.id);
       favoriteIds.delete(record.id);
-      setStatus(inHistory ? "已取消收藏；歷史中的圖片不會刪除。" : "已取消收藏；這張圖片已離開歷史，此收藏無法復原。");
+      setStatus(inHistory ? "已取消收藏；歷史中的圖片不會刪除。" : state.baseline?.id === record.id ? "已取消收藏；目前最佳基準仍保留。" : "已取消收藏；這張圖片已離開歷史，此收藏無法復原。");
     } else {
       await saveFavorite(record);
       favoriteIds.add(record.id);
@@ -1105,7 +1147,11 @@ async function restoreSavePoint(record) {
       throw new Error("儲存點內容不完整，未更改目前探索。");
     }
     const next = {
-      version: STATE_VERSION, batchNumber: point.batchNumber + 1, stats: structuredClone(point.stats),
+      version: STATE_VERSION, batchNumber: point.batchNumber + 1, stats: {},
+      learning: compatibleLearning(point.learning) ? structuredClone(point.learning) : createLearning(),
+      // "From here" explicitly chooses this saved image as the new baseline,
+      // without inventing a win against the baseline in the saved snapshot.
+      baseline: { ...record, thumbnailBlob: await thumbnailFor(record, 160) }, promotedId: null,
       parents: [structuredClone(record.genome)], votes: structuredClone(point.votes), forceExplore: false,
       currentBatch: [], selectedIds: [], dislikedIds: [], batchImage2Image: null, batchReferences: null
     };
@@ -1126,7 +1172,7 @@ async function restoreSavePoint(record) {
     elements.imageDialog.close();
     elements.libraryDrawer.close();
     elements.controlsDrawer.close();
-    setStatus(`已還原第 ${point.batchNumber} 批候選 ${record.index + 1} 的完整儲存點；按抽牌即可繼續。`);
+    setStatus(`已還原第 ${point.batchNumber} 批候選 ${record.index + 1} 的設定與學習，以此圖為基準；${compatibleLearning(point.learning) ? "按抽牌即可繼續。" : "舊儲存點沒有新版學習資料，已從中立開始。"}`);
   } catch (error) {
     if (settingsWritten) {
       for (const [key, value] of [[SETTINGS_KEY, previousSettings], [STYLE_OVERRIDES_KEY, previousOverrides]]) {
@@ -1203,11 +1249,15 @@ async function handleCandidateAction(event) {
   const card = event.target.closest(".candidate");
   const candidate = findCandidate(card?.dataset.id);
   if (!action || !candidate) return;
-  if (action === "select" || action === "like" || action === "dislike") {
+  if (action === "select" || action === "like" || action === "dislike" || action === "promote") {
     if (generating || submitting || candidate.status !== "success") return;
     const selected = new Set(state.selectedIds);
     const disliked = new Set(state.dislikedIds);
-    if (action === "dislike") {
+    if (action === "promote") {
+      state.promotedId = state.promotedId === candidate.id ? null : candidate.id;
+      if (state.promotedId) selected.add(candidate.id);
+      disliked.delete(candidate.id);
+    } else if (action === "dislike") {
       disliked.has(candidate.id) ? disliked.delete(candidate.id) : disliked.add(candidate.id);
       selected.delete(candidate.id);
     } else {
@@ -1216,6 +1266,7 @@ async function handleCandidateAction(event) {
     }
     state.selectedIds = [...selected];
     state.dislikedIds = [...disliked];
+    if (!selected.has(state.promotedId)) state.promotedId = null;
     renderCandidates();
     try { await persistState(); } catch { setStatus("偏好標記無法保存，請檢查瀏覽器儲存空間。", true); }
   } else if (submitting) return;
@@ -1337,6 +1388,8 @@ async function applySeed() {
   if (generating || submitting || referenceBusy || !initialized) return;
   const terms = parseStylePrompt(elements.seedStylePrompt.value);
   state.parents = [makeInitialGenome(terms)];
+  state.baseline = null;
+  state.promotedId = null;
   state.currentBatch = [];
   state.batchImage2Image = null;
   state.batchReferences = null;
@@ -1356,7 +1409,7 @@ async function resetExploration() {
   if (!window.confirm("清除目前演化分數、批次與未收藏歷史？內容、參考圖、Token、資料池和收藏會保留。")) return;
   await clearExplorationData();
   const terms = parseStylePrompt(elements.seedStylePrompt.value);
-  state = { version: STATE_VERSION, batchNumber: 1, stats: {}, parents: [makeInitialGenome(terms)], currentBatch: [], selectedIds: [], dislikedIds: [], votes: [], forceExplore: false };
+  state = { version: STATE_VERSION, batchNumber: 1, stats: {}, learning: createLearning(), baseline: null, promotedId: null, parents: [makeInitialGenome(terms)], currentBatch: [], selectedIds: [], dislikedIds: [], votes: [], forceExplore: false };
   releaseCandidateUrls();
   await persistState();
   renderCandidates();
@@ -1376,7 +1429,8 @@ function syncDrawerButtons() {
 
 function openPanel(panel) {
   elements.libraryDrawer.close();
-  elements.drawerTitle.textContent = { content: "內容 Prompt", style: "質量詞", settings: "生成與偏好設定" }[panel];
+  elements.drawerTitle.textContent = { content: "內容 Prompt", style: "質量詞", settings: "生成與偏好設定", ranking: "目前畫師排名" }[panel];
+  if (panel === "ranking") renderRanking();
   elements.controlsDrawer.dataset.panel = panel;
   document.querySelectorAll("[data-panel-body]").forEach((section) => { section.hidden = section.dataset.panelBody !== panel; });
   if (!elements.controlsDrawer.open) elements.controlsDrawer.showModal();
@@ -1461,8 +1515,9 @@ function bindEvents() {
     updateControls();
   });
   elements.submitVoteButton.addEventListener("click", () => submitVote([...state.selectedIds], [...state.dislikedIds]));
-  elements.ignoreBatchButton.addEventListener("click", () => submitVote([], []));
-  elements.dislikeAllButton.addEventListener("click", () => submitVote([], state.currentBatch.map((candidate) => candidate.id)));
+  elements.ignoreBatchButton.addEventListener("click", () => submitVote([], [], "ignore"));
+  elements.dislikeAllButton.addEventListener("click", () => submitVote([], state.currentBatch.map((candidate) => candidate.id), "reject"));
+  elements.baselinePreview.addEventListener("click", () => { if (state.baseline) showPreview(state.baseline); });
   elements.resetButton.addEventListener("click", resetExploration);
   elements.candidateGrid.addEventListener("click", handleCandidateAction);
   elements.styleSearch.addEventListener("input", renderStylePool);
@@ -1614,6 +1669,14 @@ async function initialize() {
       .filter((id) => state.currentBatch.some((item) => item.id === id && item.status === "success") && !state.selectedIds.includes(id));
   }
   else state.parents = [makeInitialGenome(parseStylePrompt(elements.seedStylePrompt.value))];
+  const migratedLearning = !compatibleLearning(state.learning);
+  if (migratedLearning) { state.learning = createLearning(); state.stats = {}; state.baseline = null; }
+  state.baseline ||= null;
+  state.promotedId = state.currentBatch.some((item) => item.id === state.promotedId && item.status === "success" && state.selectedIds.includes(item.id)) ? state.promotedId : null;
+  // Frozen legacy cards can still be compared within their original batch only.
+  const legacyContext = state.currentBatch.length ? `legacy:${state.currentBatch[0].id}` : null;
+  state.currentBatch.forEach((item) => { item.contextKey ||= legacyContext; });
+  if (migratedLearning) await persistState();
   await attachCurrentImages();
   initialized = true;
   renderImage2Image();
@@ -1625,6 +1688,7 @@ async function initialize() {
   bindEvents();
   void refreshAnlas();
   if (discardedOldEvolution) setStatus("已清除不相容的舊版演化紀錄。收藏與 Token 已保留。");
+  else if (migratedLearning) setStatus("新版組合學習已從中立開始；目前圖片、起始組合、設定及收藏保留。");
   else if (removedHistory) setStatus(`已依 50 張上限移除 ${removedHistory} 張最舊歷史；收藏保留。刪除的未收藏歷史無法復原。`);
   else if (favoriteIds.size > FAVORITE_LIMIT) setStatus("既有收藏已超過 50 張，未自動刪除；請取消部分收藏後再新增。", true);
 }

@@ -26,6 +26,7 @@
     export const getState = async (key, fallback) => clone((key === 'active' ? window.uiTest.state : window.uiTest.otherStates.get(key)) ?? fallback);
     export const setState = async (key, value) => {
       if (window.uiTest.saveDelay) await new Promise(resolve => setTimeout(resolve, window.uiTest.saveDelay));
+      if (key === 'active' && window.uiTest.failVote && value.batchNumber > window.uiTest.state.batchNumber) throw new Error('模擬偏好保存失敗');
       if (key === 'active') window.uiTest.state = clone(value);
       else window.uiTest.otherStates.set(key, clone(value));
     };
@@ -45,7 +46,7 @@
       prune();
     };
     const prune = () => {
-      const records = [...window.uiTest.images.values(), ...window.uiTest.favorites.values(), ...(window.uiTest.state?.currentBatch || [])];
+      const records = [...window.uiTest.images.values(), ...window.uiTest.favorites.values(), ...(window.uiTest.state?.currentBatch || []), ...(window.uiTest.state?.baseline ? [window.uiTest.state.baseline] : [])];
       const keep = new Set(records.map(item => item.savePointId));
       for (const id of window.uiTest.savepoints.keys()) if (!keep.has(id)) window.uiTest.savepoints.delete(id);
     };
@@ -101,7 +102,7 @@
     }
   `);
   const patchedApp = moduleUrl(appSource.replaceAll('"./src/', '"' + root + 'src/')
-    .replace('"' + root + 'src/storage.js?v=6"', JSON.stringify(memoryModule))
+    .replace('"' + root + 'src/storage.js?v=7"', JSON.stringify(memoryModule))
     .replace('"' + root + 'src/nai.js?v=10"', JSON.stringify(naiModule)));
   const bootstrap = moduleUrl(`
     const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN1cAAAAASUVORK5CYII='), c => c.charCodeAt(0));
@@ -500,6 +501,15 @@
       assert(data.state.selectedIds.length === 2 && data.state.dislikedIds.length === 1, 'Prompt、收藏與下載不改變正負標記');
       const rejectedId = data.state.currentBatch[1].id;
       const neutralId = data.state.currentBatch[3].id;
+      assert(data.state.baseline === null && data.state.learning.rounds === 0, '普通讚好不擅自建立基準，尚未提交不學習');
+      const promoteControl = $('.candidate:nth-child(1) [data-action="promote"]');
+      const promoteBounds = promoteControl.getBoundingClientRect();
+      assert(doc.elementFromPoint(promoteBounds.left + promoteBounds.width / 2, promoteBounds.top + promoteBounds.height / 2)?.closest('[data-action="promote"]') === promoteControl,
+        '晉升按鈕實際滑鼠命中，不會穿透到卡框的選取區');
+      click('.candidate:nth-child(1) [data-action="promote"]');
+      await until(() => data.state.promotedId === data.state.currentBatch[0].id, 'promotion marked');
+      const initialBaselineId = data.state.promotedId;
+      assert(data.state.baseline === null && $('.candidate [data-action="promote"]').textContent.includes('提交時晉升'), '晉升待本批提交，可與多選並存');
       const insertedCards = [];
       const batchObserver = new win.MutationObserver(records => {
         for (const record of records) {
@@ -524,13 +534,18 @@
       const secondBatchCards = [...doc.querySelectorAll('.candidate')];
       await until(() => !$('.card-enter'), 'second deal finished');
       assert(secondBatchCards.every((card, index) => card === $('#candidateGrid').children[index]), '發牌結束不重建或重播卡片');
-      assert(data.state.votes.length === 1 && data.state.parents.length === 2, '連點只投票一次，保留兩個父基因');
-      assert(data.state.currentBatch.slice(0, 3).every((candidate, index) => {
-        const parent = data.state.parents[index % data.state.parents.length];
+      assert(data.state.votes.length === 1 && data.state.parents.length === 1 && data.state.baseline.id === initialBaselineId, '連點只投票一次，只有明確晉升的圖片成为基準');
+      assert(data.state.learning.rounds === 1 && !$('#baselinePreview').hidden && $('#baselineHint').textContent.includes('不同生成設定'), '基準沿用舊图，新設定不與舊基準計勝負');
+      assert(data.state.currentBatch.map(item => item.genome.role).join(',') === 'weights,preferred,uncertain,unseen,explore', '五張固定 1 大幅調權、3 新增替換、1 探索');
+      assert(data.state.currentBatch.slice(1, 4).every((candidate) => {
+        const parent = data.state.parents[0];
         return JSON.stringify(candidate.genome.artists) !== JSON.stringify(parent.artists)
           && candidate.genome.artists.length >= parent.artists.length
           && candidate.genome.artists.length <= Math.min(6, parent.artists.length + 1);
-      }), '下一批三張偏好延伸都有變動，未滿六位可新增，不縮減父組合');
+      }), '三張偏好延伸都有變動，未滿六位可新增，不縮減基準組合');
+      click('[data-panel="ranking"]');
+      assert($('#drawerTitle').textContent === '目前畫師排名' && $('#rankingBody').children.length > 0 && !$('#rankingHint').textContent.includes('%'), '左側排名抽屜顯示比較依據，不假裝是勝率');
+      click('#controlsDrawer [data-close-drawer]');
       const likedDeltas = data.state.votes[0].selectedIds.map(id => data.state.votes[0].candidateDeltas[id]);
       assert(likedDeltas.length === 2 && likedDeltas.every(delta => delta === 1.5), '讚好與邊框選取按相同規則計分一次');
       assert(data.state.votes[0].dislikedIds.includes(rejectedId) && data.state.votes[0].candidateDeltas[rejectedId] === -3 && data.state.votes[0].candidateDeltas[neutralId] === -1, '明確不喜歡扣 3 分，普通未選扣 1 分');
@@ -976,12 +991,14 @@
       refClick('#generateButton');
       for (let i = 0; i < 5; i++) await answer();
       await until(() => !ref$('#ignoreBatchButton').disabled, 'old batch completed before checkpoint');
-      refClick('#ignoreBatchButton');
+      refClick('.candidate [data-action="promote"]');
+      await until(() => data.state.promotedId === data.state.currentBatch[0].id, 'checkpoint baseline marked');
+      refClick('#submitVoteButton');
       await until(() => data.pending, 'full checkpoint request');
       const checkpointRequest = structuredClone(data.requests.at(-1));
       const pointId = data.state.currentBatch[0].savePointId;
       const checkpoint = structuredClone(data.savepoints.get(pointId));
-      assert(Object.keys(checkpoint.stats).length > 0 && checkpoint.image2Image.originalBlob instanceof Blob && checkpoint.referenceTools.vibes.images.length === 1 && checkpoint.referenceTools.precise.images.length === 1, '完整儲存點包含非零分數、Image2Image 原圖、Vibe／Precise 圖片及編碼');
+      assert(checkpoint.learning.rounds > 0 && checkpoint.baseline.blob instanceof Blob && checkpoint.image2Image.originalBlob instanceof Blob && checkpoint.referenceTools.vibes.images.length === 1 && checkpoint.referenceTools.precise.images.length === 1, '完整儲存點包含新版學習、基準、Image2Image 原圖及全部參考工具');
       await answer();
       await until(() => data.images.has(data.state.currentBatch[0].id) && !ref$('.candidate [data-action="favorite"]').disabled, 'checkpoint image and thumbnail ready');
       const checkpointImage = structuredClone(data.images.get(data.state.currentBatch[0].id));
@@ -1039,6 +1056,7 @@
       await until(() => !ref$('#libraryDrawer').open && !ref$('#generateButton').disabled, 'checkpoint restored');
       assert(data.restoreCalls === 1 && data.requests.length === beforeRestoreRequests && !data.state.currentBatch.length, '連點只載入一次，還原不自動生成或付費編碼');
       assert(JSON.stringify(data.state.stats) === JSON.stringify(checkpoint.stats) && data.state.votes.length === checkpoint.votes.length && data.state.batchNumber === checkpoint.batchNumber + 1 && data.state.parents[0].id === checkpointImage.genome.id, '分數與投票回到儲存點，以收藏畫風作唯一父基因並接下一批');
+      assert(JSON.stringify(data.state.learning) === JSON.stringify(checkpoint.learning) && data.state.baseline.id === checkpointImage.id, '收藏恢復整套學習；從此繼續明確以收藏圖為基準，不捏造勝負');
       assert(ref$('#contentPrompt').value === 'savepoint content' && ref$('#negativePrompt').value === 'savepoint negative' && ref$('#seedStylePrompt').value === checkpoint.settings.seedStylePrompt && ref$('#generationModel').value === 'nai-diffusion-4-5-curated' && ref$('#generationSeed').value === '12345', '全部 Prompt、初始風格、模型與數值設定一起還原');
       assert(data.otherStates.get('image2image').fileName === 'savepoint-original.png' && data.otherStates.get('image2image').strength === 0.42 && data.otherStates.get('image2image').originalBlob.size === sourceImage.size && data.otherStates.get('referenceTools').precise.images[0].fidelity === checkpoint.referenceTools.precise.images[0].fidelity && JSON.parse(data.local.get('novelai_style_evolver_style_overrides'))[pinnedTag].pinned, 'Image2Image 原圖／參數、Precise、Vibe 編碼與風格池設定完整還原');
       await reloadReferenceFrame();
@@ -1122,6 +1140,53 @@
       }
       frame.style.width = beforeLibraryWidth;
       refClick('#libraryDrawer [data-close-drawer]');
+      const baselineBeforeReject = data.state.baseline.id;
+      let comparisonsBeforeReject = data.state.learning.rounds;
+      for (let trial = 0; trial < 2; trial++) {
+        const remaining = data.state.currentBatch.filter(item => item.status !== 'success').length;
+        refClick('#generateButton');
+        for (let i = 0; i < remaining; i++) await answer();
+        await until(() => !ref$('#dislikeAllButton').disabled, 'same-context rejection ready');
+        assert(ref$('#dislikeAllButton').textContent.includes('都不如基準'), '同設定全不喜歡明確提示都不如基準');
+        if (trial === 0) {
+          const priorWidth = frame.style.width;
+          for (const width of [1280, 760, 390, 320]) {
+            frame.style.width = width + 'px';
+            await pause(30);
+            const toolbar = ref$('.batch-toolbar').getBoundingClientRect();
+            const baselineBox = ref$('.baseline-panel').getBoundingClientRect();
+            assert(baselineBox.right <= refDoc.documentElement.clientWidth && baselineBox.left >= toolbar.left, width + 'px 最佳基準預覽不溢出卡桌');
+            const voteBar = ref$('.vote-bar').getBoundingClientRect();
+            assert(voteBar.right <= refDoc.documentElement.clientWidth && voteBar.left >= 0, width + 'px 加長的全不喜歡提示不溢出操作列');
+          }
+          frame.style.width = priorWidth;
+        }
+        refClick('#dislikeAllButton');
+        await until(() => data.pending, 'same-context rejected');
+        assert(data.state.baseline.id === baselineBeforeReject && data.state.learning.rounds === ++comparisonsBeforeReject && data.state.votes.at(-1).comparisonCount === 5,
+          '連續全不喜歡學到基準勝過五張，基準不退步');
+        assert(data.state.currentBatch.map(item => item.genome.role).join(',') === 'weights,preferred,uncertain,unseen,explore', '拒絕後仍維持 1＋3＋1，不丟棄偏好');
+        refClick('#stopButton');
+        await until(() => !ref$('#generateButton').hidden, 'rejection stopped');
+      }
+      refClick('#generateButton');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'vote rollback ready');
+      refClick('.candidate [data-action="promote"]');
+      await until(() => data.state.promotedId, 'rollback promotion marked');
+      const beforeFailedVote = JSON.stringify(data.state);
+      const beforeFailedRequests = data.requests.length;
+      data.failVote = true;
+      refClick('#submitVoteButton');
+      await until(() => !ref$('#submitVoteButton').disabled && ref$('#statusText').textContent.includes('保存失敗'), 'vote save failure');
+      assert(JSON.stringify(data.state) === beforeFailedVote && data.requests.length === beforeFailedRequests, '偏好保存失敗不晉升、不扣分、不發送下一批');
+      data.failVote = false;
+      refClick('#ignoreBatchButton');
+      await until(() => data.pending, 'ignored pending promotion');
+      assert(data.state.baseline.id === baselineBeforeReject && data.state.learning.rounds === comparisonsBeforeReject && !data.state.promotedId,
+        '忽略取消待晉升標記，保留基準，不建立勝負');
+      refClick('#stopButton');
+      await until(() => !ref$('#generateButton').hidden, 'ignored promotion stopped');
       refClick('[data-panel="settings"]');
       refClick('#resetButton');
       await until(() => data.state && !data.state.currentBatch.length && !ref$('#generateButton').disabled, 'reset before quota test');
@@ -1131,6 +1196,24 @@
       await until(() => !ref$('#generateButton').disabled && ref$('#statusText').textContent.includes('配額不足'), 'checkpoint quota failure');
       assert(data.requests.length === beforeQuotaRequests && !data.state.currentBatch.length, '儲存點保存失敗不發送生成請求、不留下缺失快照批次');
       data.failCheckpoint = false;
+      const legacyLearningPoint = { ...checkpoint, id: 'legacy-learning-point' };
+      delete legacyLearningPoint.learning;
+      delete legacyLearningPoint.baseline;
+      data.savepoints.set(legacyLearningPoint.id, legacyLearningPoint);
+      const legacyLearningId = [...data.favorites.keys()][0];
+      data.favorites.set(legacyLearningId, { ...checkpointImage, id: legacyLearningId, savePointId: legacyLearningPoint.id });
+      refClick('[data-drawer-library="favorites"]');
+      await until(() => ref$('[data-library-id="' + legacyLearningId + '"] [data-restore-savepoint]'), 'legacy learning point visible');
+      refClick('[data-library-id="' + legacyLearningId + '"] [data-restore-savepoint]');
+      await until(() => !ref$('#libraryDrawer').open && !ref$('#generateButton').disabled, 'legacy learning point restored');
+      assert(data.state.learning.rounds === 0 && data.state.learning.models.every(model => !Object.keys(model).length)
+        && ref$('#statusText').textContent.includes('中立') && data.favorites.size === 50, '舊版完整儲存點還原設定與圖片，新學習中立並提示，收藏不清除');
+      delete data.state.learning;
+      data.state.stats = { 'artist:old': { score: 20 } };
+      const beforeMigrationSettings = data.local.get('novelai_style_evolver_settings');
+      await reloadReferenceFrame();
+      assert(data.state.learning.rounds === 0 && Object.keys(data.state.stats).length === 0 && data.favorites.size === 50
+        && data.local.get('novelai_style_evolver_settings') === beforeMigrationSettings, '升級舊進度只重啟學習，不沿用污染分數，也不清除設定與收藏');
       // Exercise the production IndexedDB adapter under a unique, disposable database name.
       const databaseName = 'novelai_style_evolver_test_' + crypto.randomUUID();
       const storageSource = await (await fetch(new URL('src/storage.js', root))).text();
@@ -1178,6 +1261,15 @@
         await firstStorage.saveBatchSavePoint({ ...checkpoint, id: 'orphan-checkpoint' }, { batchNumber: 6, batchImage2Image: batchReference, currentBatch: [] });
         await firstStorage.pruneSavePoints();
         assert(await firstStorage.getSavePoint('orphan-checkpoint') === null && await firstStorage.getSavePoint('recent-checkpoint'), '未被圖片或批次引用的快照會清理，歷史快照保留');
+        const beforeBaselineState = await firstStorage.getState('active');
+        await firstStorage.saveBatchSavePoint({ ...databasePoint, id: 'baseline-only-point' }, {
+          ...beforeBaselineState, baseline: { ...databaseImage, id: 'baseline-only-image', savePointId: 'baseline-only-point' }
+        });
+        await firstStorage.pruneSavePoints();
+        assert(await firstStorage.getSavePoint('baseline-only-point'), '已離開歷史／收藏的目前最佳仍保留必要儲存點');
+        await firstStorage.setState('active', beforeBaselineState);
+        await firstStorage.pruneSavePoints();
+        assert(await firstStorage.getSavePoint('baseline-only-point') === null, '更換基準後釋放不再引用的舊基準儲存點');
         for (let i = 0; i < 47; i++) await firstStorage.saveFavorite({ ...databaseImage, id: 'db-favorite-' + i, savePointId: undefined });
         const simultaneous = await Promise.allSettled(['db-last-a', 'db-last-b'].map(id => firstStorage.saveFavorite({ ...databaseImage, id, savePointId: undefined })));
         assert(firstStorage.FAVORITE_LIMIT === 50 && (await firstStorage.getFavorites()).length === 50 && simultaneous.filter(item => item.status === 'fulfilled').length === 1 && simultaneous.filter(item => item.status === 'rejected').length === 1, '同時新增收藏仍只允許第 50 張，拒絕第 51 張');
@@ -1192,6 +1284,8 @@
         assert(savedTools.precise.images[0].blob instanceof Blob && savedTools.vibes.images[0].encodings[encodedKey] === 'dGVzdC12aWJl', '真實 IndexedDB 重開保留 Precise 圖片與 Vibe 編碼快取');
         const persistedPoint = await secondStorage.getSavePoint(databasePoint.id);
         assert(persistedPoint.image2Image.originalBlob instanceof Blob && JSON.stringify(persistedPoint.stats) === JSON.stringify(checkpoint.stats) && persistedPoint.referenceTools.precise.images[0].blob instanceof Blob, '真實 IndexedDB 重開後儲存點分數、原圖及全部參考圖仍完整');
+        assert(JSON.stringify(persistedPoint.learning) === JSON.stringify(checkpoint.learning) && persistedPoint.baseline.blob instanceof Blob,
+          '真實 IndexedDB 重開完整保留五個模型、比較依據與基準圖片');
         const restoredActive = { version: 4, batchNumber: checkpoint.batchNumber + 1, stats: checkpoint.stats, currentBatch: [] };
         await secondStorage.restoreExplorationState(restoredActive, checkpoint.image2Image, checkpoint.referenceTools);
         let rejectedRestore = false;

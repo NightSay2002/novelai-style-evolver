@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>NovelAI 畫風演化器</title>
-    <link rel="stylesheet" href="./styles.css?v=22" />
+    <link rel="stylesheet" href="./styles.css?v=23" />
   </head>
   <body>
     <svg class="icon-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -17,6 +17,7 @@
       <symbol id="i-dislike" viewBox="0 0 24 24"><path d="M17 14V3h4v11ZM17 3H7a2 2 0 0 0-2 1.6l-1.5 7A2 2 0 0 0 5.5 14H10l-.8 4.2A2.3 2.3 0 0 0 12 21l5-7"/></symbol>
       <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M8 4v6m8 4v6"/></symbol>
       <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6m3-3v6l4 2"/></symbol>
+      <symbol id="i-ranking" viewBox="0 0 24 24"><path d="M4 20V12h5v8m0 0V5h6v15m0 0v-9h5v9M2 20h20"/></symbol>
       <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
       <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
       <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
@@ -35,6 +36,7 @@
       <div class="rail-main">
         <button type="button" class="rail-button" data-panel="content" aria-controls="controlsDrawer" aria-expanded="false" title="內容 Prompt"><svg><use href="#i-text"/></svg><span>內容</span></button>
         <button type="button" class="rail-button" data-panel="style" aria-controls="controlsDrawer" aria-expanded="false" title="質量詞"><svg><use href="#i-style"/></svg><span>質量詞</span></button>
+        <button type="button" class="rail-button" data-panel="ranking" aria-controls="controlsDrawer" aria-expanded="false" title="目前畫師排名"><svg><use href="#i-ranking"/></svg><span>排名</span></button>
         <span class="rail-divider"></span>
         <button type="button" class="rail-button" data-drawer-library="favorites" aria-controls="libraryDrawer" aria-expanded="false" title="收藏"><svg><use href="#i-star"/></svg><span>收藏</span></button>
         <button type="button" class="rail-button" data-drawer-library="history" aria-controls="libraryDrawer" aria-expanded="false" title="最近 50 張"><svg><use href="#i-history"/></svg><span>歷史</span></button>
@@ -44,6 +46,7 @@
     <main class="tabletop">
       <div class="batch-toolbar">
         <div><p class="eyebrow">STYLE EXPLORATION</p><h1 id="batchTitle">第 1 批</h1></div>
+        <aside class="baseline-panel" aria-label="目前最佳基準"><button id="baselinePreview" type="button" title="放大目前最佳，不影響選取" aria-label="放大目前最佳" hidden><img id="baselineImage" alt="目前最佳基準" decoding="async" /></button><div><strong>目前最佳</strong><p id="baselineHint">讚好用於學習；另選一張設為最佳起點。</p></div></aside>
         <div class="batch-progress"><span class="progress-caption">候選畫風 <span id="progressText">0 / 5</span></span><progress id="batchProgress" max="5" value="0" aria-label="本批生成進度"></progress></div>
       </div>
       <section class="card-stage" aria-label="五個畫風候選">
@@ -145,6 +148,11 @@ ultra complexity, visual novel cg</textarea>
           <div class="section-divider"></div>
           <button id="resetButton" type="button" class="danger ghost full">重新開始探索</button><p class="hint">清除演化進度與未收藏歷史，保留內容、參考圖、收藏與 Token。</p>
         </section>
+        <section data-panel-body="ranking" hidden>
+          <p id="rankingHint" class="hint" role="status"></p>
+          <div class="ranking-scroll"><table class="ranking-table"><thead><tr><th scope="col">排名</th><th scope="col">畫師</th><th scope="col">偏好分</th><th scope="col">比較輪數</th><th scope="col">依據</th></tr></thead><tbody id="rankingBody"></tbody></table></div>
+          <p class="hint">全域共用排名；只用同生成設定的圖片建立比較。數字權重 1.0 的個別偏好分僅供參考，搭配與權重仍會影響結果。共同出現但未被區分的畫師標為待確認。</p>
+        </section>
       </div>
       <div class="drawer-footer"><span>設定保存在目前瀏覽器</span><button type="button" class="secondary" data-close-drawer>回到卡桌 <svg><use href="#i-arrow"/></svg></button></div>
     </dialog>
@@ -164,6 +172,6 @@ ultra complexity, visual novel cg</textarea>
       <div class="preview-actions"><button id="previewFavorite" type="button" class="favorite-button secondary" aria-label="收藏目前圖片" aria-pressed="false" hidden disabled><svg><use href="#i-star"/></svg><span>收藏</span></button></div>
       <details class="preview-details"><summary>完整 Prompt 與 Negative Prompt</summary><pre id="dialogPrompt"></pre></details>
     </dialog>
-    <script type="module" src="./app.js?v=27"></script>
+    <script type="module" src="./app.js?v=28"></script>
   </body>
 </html>

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check app.js && node --check src/evolution.js && node --check src/style-taxonomy.js && node --check src/nai.js && node --check src/storage.js && node --check src/png-metadata.js && node --test test/*.test.js && python3 -m unittest discover -s test -p 'test_*.py'",
-    "test": "node --test test/*.test.js"
+    "check": "node --check app.js && node --check src/evolution.js && node --check src/preference.js && node --check src/style-taxonomy.js && node --check src/nai.js && node --check src/storage.js && node --check src/png-metadata.js && node --test test/*.test.js && python3 -m unittest discover -s test -p 'test_*.py'",
+    "test": "node --test test/*.test.js",
+    "benchmark": "node scripts/benchmark_preferences.mjs"
   }
 }
