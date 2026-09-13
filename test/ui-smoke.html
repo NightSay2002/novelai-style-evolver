@@ -750,7 +750,6 @@
       assert(data.state.batchNumber === 7 && data.state.batchImage2Image === null && data.requests.slice(textRequestStart).every(request => request.image2Image === null), '關閉後的下一批回到文字生圖，保留輸入參考圖');
       assert(data.requests.slice(textRequestStart).every(request => JSON.stringify(request.generationSettings) === JSON.stringify(nextGeneration)), '下一批五張使用新生成設定，Seed 0 不會變成預設或隨機值');
       refWin.confirm = () => true;
-      refClick('[data-panel="settings"]');
       refClick('#resetButton');
       await until(() => data.state?.batchNumber === 1 && !data.state.currentBatch.length && !ref$('#generateButton').hidden, 'exploration reset');
       assert(data.otherStates.get('image2image').fileName === 'reference-two.png' && data.favorites.size === 1 && ref$('#contentPrompt').value === 'next batch content', '重新開始探索保留參考圖、內容及收藏');
@@ -1189,7 +1188,6 @@
         '忽略取消待晉升標記，保留基準，不建立勝負');
       refClick('#stopButton');
       await until(() => !ref$('#generateButton').hidden, 'ignored promotion stopped');
-      refClick('[data-panel="settings"]');
       refClick('#resetButton');
       await until(() => data.state && !data.state.currentBatch.length && !ref$('#generateButton').disabled, 'reset before quota test');
       const beforeQuotaRequests = data.requests.length;

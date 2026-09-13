@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>NovelAI 畫風演化器</title>
-    <link rel="stylesheet" href="./styles.css?v=23" />
+    <link rel="stylesheet" href="./styles.css?v=24" />
   </head>
   <body>
     <svg class="icon-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -66,6 +66,7 @@
         <button id="generateButton" type="button" class="primary" aria-describedby="generationCost" disabled><svg><use href="#i-spark"/></svg><span>抽取五種畫風</span></button>
       </div>
     </div></div>
+    <button id="resetButton" type="button" class="danger ghost reset-exploration" title="清除演化進度與未收藏歷史，保留內容、參考圖、收藏與 Token。">重新開始探索</button>
     <dialog id="controlsDrawer" class="drawer side-drawer" aria-labelledby="drawerTitle">
       <div class="drawer-heading"><div><p class="eyebrow">WORKSPACE</p><h2 id="drawerTitle">內容 Prompt</h2></div><button type="button" class="icon-button" data-close-drawer aria-label="關閉設定抽屜"><svg><use href="#i-close"/></svg></button></div>
       <div class="drawer-body">
@@ -145,8 +146,6 @@ ultra complexity, visual novel cg</textarea>
           <p class="hint">寬高須為 64 的倍數。調高尺寸或 Steps 可能消耗 Anlas，實際限制與計費以 NAI 為準。</p>
           <div class="section-divider"></div>
           <label class="motion-setting"><span>減少動態效果<small>停止背景流動與卡片動畫</small></span><input id="reduceMotion" type="checkbox" /></label>
-          <div class="section-divider"></div>
-          <button id="resetButton" type="button" class="danger ghost full">重新開始探索</button><p class="hint">清除演化進度與未收藏歷史，保留內容、參考圖、收藏與 Token。</p>
         </section>
         <section data-panel-body="ranking" hidden>
           <p id="rankingHint" class="hint" role="status"></p>

@@ -159,7 +159,8 @@ progress::-moz-progress-bar { background: var(--accent); }
 .candidate-grid[data-shape="landscape"] .candidate-actions .prompt-button { font-size: 10px; padding: 6px 0; }
 .status-toast { position: fixed; right: 22px; bottom: 92px; z-index: 8; max-width: min(460px, calc(100vw - 100px)); margin: 0; padding: 12px 16px; border: 1px solid #b797e94d; border-radius: 12px; background: #231c30f5; box-shadow: 0 6px 24px #0006; color: #ded0ee; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .status-toast.is-error { color: #ffb4bf; border-color: #eb889660; }
-.dock-wrap { position: fixed; bottom: 18px; left: 72px; right: 0; display: flex; justify-content: center; padding: 0 20px; pointer-events: none; z-index: 6; }
+.dock-wrap { position: fixed; bottom: 18px; left: 72px; right: 164px; display: flex; justify-content: center; padding: 0 20px; pointer-events: none; z-index: 6; }
+button.reset-exploration { position: fixed; right: 22px; bottom: 18px; z-index: 6; width: 132px; min-height: 40px; padding: 10px 12px; font-size: 11px; background: #19151fe8; }
 .vote-bar { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; max-width: 100%; gap: 18px; padding: 9px; border: 1px solid #bb94f180; border-radius: 15px; box-shadow: 0 0 16px #b077ef35, inset 0 0 14px #b077ef0e, 0 8px 36px #0006; background: #211a2ce8; backdrop-filter: blur(20px); pointer-events: auto; }
 .selection-summary { padding-left: 8px; font-size: 11px; color: #cfbcdf; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .vote-actions { display: flex; gap: 8px; }
@@ -301,7 +302,7 @@ dialog::backdrop { background: #07070c80; backdrop-filter: blur(5px); }
   .tool-rail { top: 58px; width: 54px; padding: 14px 4px; }
   .rail-button { width: 42px; height: 54px; }
   .rail-main { gap: 5px; }
-  .tabletop { margin-left: 54px; padding: 16px 0 165px; min-height: calc(100svh - 58px); }
+  .tabletop { margin-left: 54px; padding: 16px 0 213px; min-height: calc(100svh - 58px); }
   .batch-toolbar { padding: 0 19px; }
   .batch-toolbar h1 { font-size: 17px; }
   .batch-progress { width: 92px; }
@@ -313,8 +314,9 @@ dialog::backdrop { background: #07070c80; backdrop-filter: blur(5px); }
   .card-seal { width: 62px; height: 62px; }
   .candidate-actions .icon-button { width: 34px; height: 34px; padding: 8px; }
   .candidate-actions .prompt-button { font-size: 11px; padding: 9px 0; }
-  .status-toast { right: 12px; bottom: 172px; max-width: calc(100vw - 80px); }
-  .dock-wrap { left: 54px; bottom: max(14px, env(safe-area-inset-bottom)); padding: 0 12px; }
+  .status-toast { right: 12px; bottom: 220px; max-width: calc(100vw - 80px); }
+  .dock-wrap { left: 54px; right: 0; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 48px); padding: 0 12px; }
+  button.reset-exploration { right: 12px; bottom: max(14px, env(safe-area-inset-bottom)); }
   .vote-bar { width: 100%; max-width: 380px; flex-direction: column; gap: 8px; padding: 11px; }
   .selection-summary { text-align: center; font-size: 10px; padding-left: 0; }
   .vote-actions { width: 100%; justify-content: center; flex-wrap: wrap; gap: 4px; }
