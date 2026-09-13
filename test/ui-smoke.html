@@ -1166,6 +1166,8 @@
         assert(data.state.baseline.id === baselineBeforeReject && data.state.learning.rounds === ++comparisonsBeforeReject && data.state.votes.at(-1).comparisonCount === 5,
           '連續全不喜歡學到基準勝過五張，基準不退步');
         assert(data.state.currentBatch.map(item => item.genome.role).join(',') === 'weights,preferred,uncertain,unseen,explore', '拒絕後仍維持 1＋3＋1，不丟棄偏好');
+        const previousPrompts = new Set(data.state.votes.slice(-50).flatMap(vote => vote.candidates || []).filter(item => item.contextKey === data.state.currentBatch[0].contextKey).map(item => item.prompt));
+        assert(data.state.currentBatch.every(item => !previousPrompts.has(item.prompt)), '同設定換批排除已生成的 Prompt，高分延伸不原樣重出');
         refClick('#stopButton');
         await until(() => !ref$('#generateButton').hidden, 'rejection stopped');
       }

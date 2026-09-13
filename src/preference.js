@@ -228,7 +228,7 @@ function signature(genome) {
 
 export const CANDIDATE_ROLES = { weights: "大幅調權", preferred: "高分延伸", uncertain: "偏好確認", unseen: "新畫師延伸", explore: "全新探索" };
 
-export function generatePreferenceBatch({ batchNumber, parent, artistPool, fixedStyleTerms = [], learning = createLearning(), rng = Math.random }) {
+export function generatePreferenceBatch({ batchNumber, parent, artistPool, fixedStyleTerms = [], learning = createLearning(), excludedGenomes = [], rng = Math.random }) {
   if (!artistPool.length) throw new Error("畫師資料庫是空的。");
   const base = structuredClone(parent || { artists: [], styleTerms: fixedStyleTerms });
   base.artists = base.artists.slice(0, 6);
@@ -241,7 +241,7 @@ export function generatePreferenceBatch({ batchNumber, parent, artistPool, fixed
   const observed = available.filter((item) => learning.artists[tagKey(item.tag)]);
   const roles = Object.keys(CANDIDATE_ROLES);
   const results = [];
-  const used = new Set();
+  const used = new Set([signature(base), ...excludedGenomes.map(signature)]);
   const introduced = new Set();
   const modelIndex = Math.floor(rng() * MODEL_COUNT);
   const createArtist = (tag, weight = pick(weights, rng)) => ({ tag, category: "artist", polarity: "positive", weight });
@@ -257,39 +257,46 @@ export function generatePreferenceBatch({ batchNumber, parent, artistPool, fixed
     // The operation is drawn once per slot, not selected by the model: 50/50 below six.
     const mutableIndices = base.artists.map((item, index) => !item.pinned ? index : -1).filter((index) => index >= 0);
     const add = base.artists.length < 6 && (!mutableIndices.length || rng() < 0.5);
-    for (let attempt = 0; attempt < 64; attempt += 1) {
-      let artists = structuredClone(base.artists);
-      let operation = role;
-      if (!artists.length || role === "explore") {
-        artists = artists.filter((item) => item.pinned);
-        const [min, max] = artistCountRange(batchNumber);
-        const count = Math.max(artists.length, min + Math.floor(rng() * (max - min + 1)));
-        const pool = explorationPool;
-        const usedTags = new Set(artists.map((item) => tagKey(item.tag)));
-        for (let tries = 0; artists.length < count && tries < 120; tries += 1) {
-          const item = pick(pool, rng);
-          if (!item || usedTags.has(tagKey(item.tag))) continue;
-          artists.push(createArtist(item.tag));
-          usedTags.add(tagKey(item.tag));
-        }
-        operation = "explore";
-      } else if (role === "weights") artists = redistributeWeights(artists, rng);
-      else if (source.length && (add || mutableIndices.length)) {
-        const item = pick(source, rng);
-        if (add) { artists.push(createArtist(item.tag)); operation = "add"; }
-        else {
-          const index = pick(mutableIndices, rng);
-          artists[index] = createArtist(item.tag, artists[index].weight);
-          operation = "replace";
-        }
-      } else operation = "locked";
-      const genome = { artists, styleTerms: structuredClone(fixedStyleTerms), generation: batchNumber,
-        parentIds: base.id ? [base.id] : [], role, mutation: { operation, parentId: base.id || null } };
-      if (used.has(signature(genome))) continue;
-      const prediction = predictPreference(genome, learning);
-      const score = role === "preferred" ? prediction.score
-        : role === "weights" || role === "uncertain" ? prediction.values[modelIndex] : rng();
-      proposals.push({ genome, score });
+    // A small high-scoring pool may have exhausted all its single-artist edits.
+    // Try the full pool before falling back to a locked copy of the parent.
+    const sources = [source];
+    if (["preferred", "uncertain", "unseen"].includes(role)) sources.push(fresh(available));
+    for (const candidateSource of sources) {
+      for (let attempt = 0; attempt < 64; attempt += 1) {
+        let artists = structuredClone(base.artists);
+        let operation = role;
+        if (!artists.length || role === "explore") {
+          artists = artists.filter((item) => item.pinned);
+          const [min, max] = artistCountRange(batchNumber);
+          const count = Math.max(artists.length, min + Math.floor(rng() * (max - min + 1)));
+          const pool = explorationPool;
+          const usedTags = new Set(artists.map((item) => tagKey(item.tag)));
+          for (let tries = 0; artists.length < count && tries < 120; tries += 1) {
+            const item = pick(pool, rng);
+            if (!item || usedTags.has(tagKey(item.tag))) continue;
+            artists.push(createArtist(item.tag));
+            usedTags.add(tagKey(item.tag));
+          }
+          operation = "explore";
+        } else if (role === "weights") artists = redistributeWeights(artists, rng);
+        else if (candidateSource.length && (add || mutableIndices.length)) {
+          const item = pick(candidateSource, rng);
+          if (add) { artists.push(createArtist(item.tag)); operation = "add"; }
+          else {
+            const index = pick(mutableIndices, rng);
+            artists[index] = createArtist(item.tag, artists[index].weight);
+            operation = "replace";
+          }
+        } else operation = "locked";
+        const genome = { artists, styleTerms: structuredClone(fixedStyleTerms), generation: batchNumber,
+          parentIds: base.id ? [base.id] : [], role, mutation: { operation, parentId: base.id || null } };
+        if (used.has(signature(genome))) continue;
+        const prediction = predictPreference(genome, learning);
+        const score = role === "preferred" ? prediction.score
+          : role === "weights" || role === "uncertain" ? prediction.values[modelIndex] : rng();
+        proposals.push({ genome, score });
+      }
+      if (proposals.length) break;
     }
     proposals.sort((a, b) => b.score - a.score);
     const chosen = proposals[0]?.genome || { artists: structuredClone(base.artists), styleTerms: structuredClone(fixedStyleTerms),

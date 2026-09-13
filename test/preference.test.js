@@ -184,3 +184,34 @@ test("52k pool uses learned high scorers without biasing the fresh slot; bounded
   assert(compatibleLearning(structuredClone(learning)));
   assert(!compatibleLearning({ version: 0 }));
 });
+
+test("high-score extensions avoid prior batches and use another artist when ranked edits are exhausted", () => {
+  const pool = Array.from({ length: 100 }, (_, i) => ({ tag: `artist:${i}` }));
+  const parent = genome(...Array.from({ length: 6 }, (_, i) => artist(String(i), 1, i === 0)));
+  const learning = createLearning();
+  learning.artists["artist:42"] = { comparisons: 10, independent: 10, appearances: 10 };
+  learning.models.forEach((model) => { model["a:artist:42"] = 3; });
+  const key = value => JSON.stringify(value.artists.map(item => [item.tag.toLowerCase(), item.weight]).sort());
+  // Every permitted placement of the sole high-scoring artist has already run.
+  const prior = parent.artists.flatMap((item, index) => item.pinned ? [] : [{ artists: parent.artists.map((old, i) => i === index ? artist("42", old.weight) : old) }]);
+  const seen = new Set([key(parent), ...prior.map(key)]);
+  const rng = random(22);
+  for (let round = 0; round < 20; round++) {
+    const batch = generatePreferenceBatch({ batchNumber: 20 + round, parent, artistPool: pool, learning, excludedGenomes: prior, rng });
+    assert.equal(batch[1].mutation.operation, "replace");
+    assert(batch[1].artists.every(item => item.tag !== "artist:42"), "exhausted ranked edits must widen the pool");
+    for (const candidate of batch) {
+      assert(!seen.has(key(candidate)), "same-setting prior combinations must not be regenerated");
+      seen.add(key(candidate));
+      assert.deepEqual(candidate.artists.find(item => item.pinned), parent.artists[0]);
+    }
+    for (const candidate of batch.slice(1, 4)) {
+      const added = candidate.artists.filter(item => !parent.artists.some(old => old.tag === item.tag));
+      const removed = parent.artists.filter(item => !candidate.artists.some(next => next.tag === item.tag));
+      assert.equal(added.length, 1);
+      assert.equal(removed.length, 1);
+      assert.equal(added[0].weight, removed[0].weight);
+    }
+    prior.push(...batch);
+  }
+});

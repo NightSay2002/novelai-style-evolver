@@ -3,7 +3,7 @@ import {
   parseStylePrompt,
   serializeGenome
 } from "./src/evolution.js?v=11";
-import { applyPreferenceVote, CANDIDATE_ROLES, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceRanking, sameContext } from "./src/preference.js?v=1";
+import { applyPreferenceVote, CANDIDATE_ROLES, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceRanking, sameContext } from "./src/preference.js?v=2";
 import { classifyStylePool, STYLE_LAYERS } from "./src/style-taxonomy.js?v=1";
 import { availableNoiseSchedules, availableSamplers, buildNovelAiPayload, DEFAULT_GENERATION_SETTINGS, encodeNovelAiVibe, estimateNovelAiCost, fetchNovelAiAnlas, FIXED_SETTINGS, generateNovelAiImage, modelCapabilities, MODELS, NOISE_SCHEDULES, normalizeGenerationSettings, normalizeImageDimensions, SAMPLERS } from "./src/nai.js?v=10";
 import { injectCandidateMetadata } from "./src/png-metadata.js?v=6";
@@ -954,11 +954,6 @@ async function prepareBatch() {
     learning: structuredClone(state.learning), baseline: structuredClone(state.baseline),
     settings, image2Image: reference, referenceTools: tools, styleOverrides: structuredClone(styleOverrides)
   };
-  const genomes = generatePreferenceBatch({
-    batchNumber: state.batchNumber, parent: state.baseline?.genome || state.parents[0], artistPool,
-    fixedStyleTerms: parseStylePrompt(settings.seedStylePrompt),
-    learning: state.learning
-  });
   saveSettings();
   const batchReferences = await snapshotReferenceTools(settings.generationSettings.model, tools);
   const batchImage2Image = reference.enabled && reference.blob ? {
@@ -970,6 +965,12 @@ async function prepareBatch() {
   } : null;
   const contextKey = await comparisonContext(settings, batchImage2Image, batchReferences);
   point.contextKey = contextKey;
+  const recent = state.votes.slice(-50).flatMap((vote) => vote.candidates || []);
+  const genomes = generatePreferenceBatch({
+    batchNumber: state.batchNumber, parent: state.baseline?.genome || state.parents[0], artistPool,
+    fixedStyleTerms: parseStylePrompt(settings.seedStylePrompt), learning: state.learning,
+    excludedGenomes: recent.filter((item) => item.contextKey === contextKey).map((item) => item.genome)
+  });
   const next = {
     ...state, batchReferences, batchImage2Image,
     currentBatch: genomes.map((genome, index) => ({ ...candidateRecord(genome, index, settings, batchImage2Image, batchReferences, point.id), contextKey })),
