@@ -115,9 +115,9 @@ export function parseStylePrompt(prompt = "", styleTags = []) {
 }
 
 export function artistCountRange(batchNumber) {
-  if (batchNumber <= 2) return [1, 1];
-  if (batchNumber <= 4) return [1, 2];
-  if (batchNumber <= 7) return [2, 4];
+  if (batchNumber <= 1) return [1, 1];
+  if (batchNumber <= 2) return [1, 2];
+  if (batchNumber <= 4) return [2, 3];
   return [3, 6];
 }
 

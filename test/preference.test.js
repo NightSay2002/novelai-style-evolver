@@ -141,7 +141,7 @@ test("1+3+1 preserves replacement weights and pins, permits additions, and keeps
   const rng = random(3);
   const pool = Array.from({ length: 100 }, (_, i) => ({ tag: `artist:${i}` }));
   const quality = [{ tag: "best quality", weight: 1.5 }];
-  const counts = { add: 0, replace: 0 };
+  const counts = { add: 0, replace: 0, grow: 0 };
   for (let size = 1; size <= 6; size += 1) {
     const parent = genome(...Array.from({ length: size }, (_, i) => artist(String(i), 0.2 + i * 0.3, i === 0 && size > 1)));
     for (let trial = 0; trial < 25; trial += 1) {
@@ -150,7 +150,7 @@ test("1+3+1 preserves replacement weights and pins, permits additions, and keeps
       assert.equal(new Set(batch.map((item) => JSON.stringify(item.artists))).size, 5);
       for (const candidate of batch) {
         assert.deepEqual(candidate.styleTerms, quality);
-        assert(candidate.artists.length <= 6);
+        assert(candidate.artists.length >= 3 && candidate.artists.length <= 6);
         assert.equal(new Set(candidate.artists.map((item) => item.tag)).size, candidate.artists.length);
         if (size > 1) assert.deepEqual(candidate.artists.find((item) => item.pinned), parent.artists[0]);
       }
@@ -158,16 +158,55 @@ test("1+3+1 preserves replacement weights and pins, permits additions, and keeps
         counts[candidate.mutation.operation] += 1;
         const added = candidate.artists.filter((item) => !parent.artists.some((old) => old.tag === item.tag));
         const removed = parent.artists.filter((item) => !candidate.artists.some((next) => next.tag === item.tag));
-        assert.equal(added.length, 1);
+        assert.equal(added.length, size < 3 ? 3 - size : 1);
+        if (size < 3) {
+          assert.equal(candidate.mutation.operation, "grow");
+          assert.equal(removed.length, 0);
+        }
         assert(removed.length <= 1);
         if (removed.length) assert.equal(added[0].weight, removed[0].weight);
         candidate.artists.filter((item) => !added.includes(item)).forEach((item) => assert.deepEqual(item, parent.artists.find((old) => old.tag === item.tag)));
       }
     }
   }
-  assert(counts.add > 100 && counts.replace > 100);
+  assert(counts.grow === 150 && counts.add > 60 && counts.replace > 100);
   const locked = genome(...pool.slice(0, 6).map((item) => ({ ...item, weight: 1, pinned: true })));
   assert(generatePreferenceBatch({ batchNumber: 20, parent: locked, artistPool: pool, rng }).every((item) => item.mutation.operation === "locked"));
+});
+
+test("fifth batch has at least three artists even when a one-artist baseline is never promoted", () => {
+  const pool = Array.from({ length: 100 }, (_, i) => ({ tag: `artist:${i}` }));
+  const parent = genome(artist("0", 0.8));
+  const original = structuredClone(parent);
+  const quality = [{ tag: "best quality", weight: 1.5 }];
+  for (let seed = 1; seed <= 10; seed++) {
+    const rng = random(seed);
+    for (let round = 1; round <= 8; round++) {
+      const batch = generatePreferenceBatch({ batchNumber: round, parent, artistPool: pool, fixedStyleTerms: quality, rng });
+      const min = round >= 5 ? 3 : round >= 3 ? 2 : 1;
+      for (const candidate of batch) {
+        assert(candidate.artists.length >= min && candidate.artists.length <= 6, `round ${round} must meet its minimum`);
+        assert.equal(new Set(candidate.artists.map(item => item.tag)).size, candidate.artists.length);
+        assert(candidate.artists.every(item => item.weight >= 0.1 && item.weight <= 2));
+        assert.deepEqual(candidate.styleTerms, quality);
+      }
+      if (round >= 3) {
+        batch.slice(0, 4).forEach((candidate, index) => {
+          assert.equal(candidate.mutation.operation, "grow");
+          const retained = candidate.artists.find(item => item.tag === parent.artists[0].tag);
+          assert(retained);
+          if (index === 0) assert(Math.abs(retained.weight - 0.8) >= 0.699);
+          else assert.deepEqual(retained, parent.artists[0]);
+        });
+      }
+    }
+  }
+  assert.deepEqual(parent, original, "candidate growth must not silently overwrite the saved baseline");
+  const pinned = genome(artist("0", 0.8, true));
+  const pinnedBatch = generatePreferenceBatch({ batchNumber: 5, parent: pinned, artistPool: pool, rng: random(5) });
+  assert(pinnedBatch.every(candidate => candidate.artists.length >= 3 && candidate.artists.some(item => item.pinned && item.tag === "artist:0" && item.weight === 0.8)));
+  const coldStart = generatePreferenceBatch({ batchNumber: 5, artistPool: pool, rng: random(5) });
+  assert(coldStart.every(candidate => candidate.artists.length >= 3));
 });
 
 test("52k pool uses learned high scorers without biasing the fresh slot; bounded performance", () => {

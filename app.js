@@ -2,8 +2,8 @@ import {
   makeInitialGenome,
   parseStylePrompt,
   serializeGenome
-} from "./src/evolution.js?v=11";
-import { applyPreferenceVote, CANDIDATE_ROLES, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceRanking, sameContext } from "./src/preference.js?v=2";
+} from "./src/evolution.js?v=12";
+import { applyPreferenceVote, CANDIDATE_ROLES, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceRanking, sameContext } from "./src/preference.js?v=3";
 import { classifyStylePool, STYLE_LAYERS } from "./src/style-taxonomy.js?v=1";
 import { availableNoiseSchedules, availableSamplers, buildNovelAiPayload, DEFAULT_GENERATION_SETTINGS, encodeNovelAiVibe, estimateNovelAiCost, fetchNovelAiAnlas, FIXED_SETTINGS, generateNovelAiImage, modelCapabilities, MODELS, NOISE_SCHEDULES, normalizeGenerationSettings, normalizeImageDimensions, SAMPLERS } from "./src/nai.js?v=10";
 import { injectCandidateMetadata } from "./src/png-metadata.js?v=6";
@@ -767,7 +767,8 @@ function renderCandidates({ animate = false } = {}) {
         : success ? "圖片載入中…" : "等待生成";
     card.querySelector(".artist-count").textContent = `${candidate.genome.artists.length} 位畫師`;
     card.querySelector(".candidate-role").textContent = candidate.genome.mutation?.operation === "locked" ? "固定／候選不足"
-      : candidate.genome.mutation?.operation === "explore" && candidate.genome.role !== "explore" ? "初始探索" : CANDIDATE_ROLES[candidate.genome.role] || "舊批次";
+      : candidate.genome.mutation?.operation === "grow" ? { weights: "調權增員", preferred: "高分增員", uncertain: "確認增員", unseen: "新畫師增員" }[candidate.genome.role]
+        : candidate.genome.mutation?.operation === "explore" && candidate.genome.role !== "explore" ? "初始探索" : CANDIDATE_ROLES[candidate.genome.role] || "舊批次";
     const promoteButton = card.querySelector('[data-action="promote"]');
     const promoted = state.promotedId === candidate.id;
     promoteButton.textContent = promoted ? "提交時晉升 ✓" : sameContext(state.baseline, candidate) ? "比基準更好" : "設為目前最佳";

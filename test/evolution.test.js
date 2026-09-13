@@ -254,8 +254,9 @@ test("separates digit-ending tags from NovelAI's closing weight delimiter", () =
 
 test("uses the agreed artist-count stages", () => {
   assert.deepEqual(artistCountRange(1), [1, 1]);
-  assert.deepEqual(artistCountRange(3), [1, 2]);
-  assert.deepEqual(artistCountRange(5), [2, 4]);
+  assert.deepEqual(artistCountRange(2), [1, 2]);
+  assert.deepEqual(artistCountRange(3), [2, 3]);
+  assert.deepEqual(artistCountRange(5), [3, 6]);
   assert.deepEqual(artistCountRange(8), [3, 6]);
 });
 

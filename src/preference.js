@@ -1,4 +1,4 @@
-import { artistCountRange, voteDeltas } from "./evolution.js?v=11";
+import { artistCountRange, voteDeltas } from "./evolution.js?v=12";
 
 export const LEARNING_VERSION = 1;
 const MODEL_COUNT = 5;
@@ -232,6 +232,7 @@ export function generatePreferenceBatch({ batchNumber, parent, artistPool, fixed
   if (!artistPool.length) throw new Error("畫師資料庫是空的。");
   const base = structuredClone(parent || { artists: [], styleTerms: fixedStyleTerms });
   base.artists = base.artists.slice(0, 6);
+  const [min, max] = artistCountRange(batchNumber);
   const tags = new Set(base.artists.map((item) => tagKey(item.tag)));
   const available = artistPool.filter((item) => !tags.has(tagKey(item.tag)));
   const unseen = available.filter((item) => !learning.artists[tagKey(item.tag)]);
@@ -267,7 +268,6 @@ export function generatePreferenceBatch({ batchNumber, parent, artistPool, fixed
         let operation = role;
         if (!artists.length || role === "explore") {
           artists = artists.filter((item) => item.pinned);
-          const [min, max] = artistCountRange(batchNumber);
           const count = Math.max(artists.length, min + Math.floor(rng() * (max - min + 1)));
           const pool = explorationPool;
           const usedTags = new Set(artists.map((item) => tagKey(item.tag)));
@@ -278,16 +278,32 @@ export function generatePreferenceBatch({ batchNumber, parent, artistPool, fixed
             usedTags.add(tagKey(item.tag));
           }
           operation = "explore";
-        } else if (role === "weights") artists = redistributeWeights(artists, rng);
-        else if (candidateSource.length && (add || mutableIndices.length)) {
-          const item = pick(candidateSource, rng);
-          if (add) { artists.push(createArtist(item.tag)); operation = "add"; }
-          else {
-            const index = pick(mutableIndices, rng);
-            artists[index] = createArtist(item.tag, artists[index].weight);
-            operation = "replace";
+        } else {
+          if (role === "weights") artists = redistributeWeights(artists, rng);
+          if (artists.length < min) {
+            // Growth applies to preference cards too, even if the saved baseline
+            // still has one artist. Keep its identities and fill the missing slots.
+            const usedTags = new Set(artists.map((item) => tagKey(item.tag)));
+            for (let tries = 0; artists.length < min && tries < 120; tries += 1) {
+              const pool = artists.length === base.artists.length && tries < 20 ? candidateSource : available;
+              const item = pick(pool, rng);
+              if (!item || usedTags.has(tagKey(item.tag))) continue;
+              artists.push(createArtist(item.tag));
+              usedTags.add(tagKey(item.tag));
+            }
+            operation = artists.length > base.artists.length ? "grow" : "locked";
+          } else if (role !== "weights") {
+            if (candidateSource.length && (add || mutableIndices.length)) {
+              const item = pick(candidateSource, rng);
+              if (add) { artists.push(createArtist(item.tag)); operation = "add"; }
+              else {
+                const index = pick(mutableIndices, rng);
+                artists[index] = createArtist(item.tag, artists[index].weight);
+                operation = "replace";
+              }
+            } else operation = "locked";
           }
-        } else operation = "locked";
+        }
         const genome = { artists, styleTerms: structuredClone(fixedStyleTerms), generation: batchNumber,
           parentIds: base.id ? [base.id] : [], role, mutation: { operation, parentId: base.id || null } };
         if (used.has(signature(genome))) continue;

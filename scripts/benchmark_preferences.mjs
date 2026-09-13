@@ -1,5 +1,5 @@
 // Synthetic preferences only. No network, images, tokens or browser storage.
-import { applyBatchVote, generateBatch, makeInitialGenome } from "../src/evolution.js";
+import { applyBatchVote, artistCountRange, generateBatch, makeInitialGenome } from "../src/evolution.js";
 import { applyPreferenceVote, createLearning, generatePreferenceBatch } from "../src/preference.js";
 
 const seeds = Number(process.argv[2] || 12);
@@ -47,7 +47,8 @@ function run(method, scenario, seed) {
     else if (method === "old") genomes = generateBatch({ batchNumber: round, parents, artistPool: pool, stylePool: [], fixedStyleTerms: [], categories: {}, stats, forceExplore, rng });
     else genomes = Array.from({ length: 5 }, () => {
       const artists = [];
-      const count = round <= 2 ? 1 : round <= 4 ? 1 + Math.floor(rng() * 2) : round <= 7 ? 2 + Math.floor(rng() * 3) : 3 + Math.floor(rng() * 4);
+      const [min, max] = artistCountRange(round);
+      const count = min + Math.floor(rng() * (max - min + 1));
       while (artists.length < count) {
         const item = pool[Math.floor(rng() * pool.length)];
         if (!artists.some((old) => old.tag === item.tag)) artists.push({ ...item, weight: (1 + Math.floor(rng() * 20)) / 10 });

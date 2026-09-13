@@ -617,6 +617,8 @@
       for (let i = 0; i < 5; i++) await answer();
       await until(() => !restoredDoc.querySelector('#ignoreBatchButton').disabled, 'next ignored batch complete');
       assert(data.state.batchNumber === 5 && !restoredDoc.querySelector('#ignoreBatchButton').hidden, '忽略後正常生成下一批且可繼續操作');
+      assert(data.state.baseline.genome.artists.length === 1 && data.state.currentBatch.every(candidate => candidate.genome.artists.length >= 3), '第五批所有候選至少三位畫師，不被保留的單人基準卡住');
+      assert(data.requests.slice(-5).every(request => (request.prompt.match(/artist:/g) || []).length >= 3), '第五批實際生成 Prompt 同樣包含至少三位畫師');
       let refDoc = restoredDoc;
       let refWin = frame.contentWindow;
       const ref$ = selector => refDoc.querySelector(selector);
