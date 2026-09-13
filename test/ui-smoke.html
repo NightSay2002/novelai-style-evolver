@@ -1216,6 +1216,71 @@
       await reloadReferenceFrame();
       assert(data.state.learning.rounds === 0 && Object.keys(data.state.stats).length === 0 && data.favorites.size === 50
         && data.local.get('novelai_style_evolver_settings') === beforeMigrationSettings, '升級舊進度只重啟學習，不沿用污染分數，也不清除設定與收藏');
+      // Reproduce learned progress stranded on the empty initial parent without promotion.
+      data.state = { ...data.state, learning: structuredClone(checkpoint.learning), baseline: null,
+        parents: [{ ...structuredClone(checkpointImage.genome), id: 'initial', artists: [] }], batchNumber: 7,
+        currentBatch: [], batchImage2Image: null, batchReferences: null, selectedIds: [], dislikedIds: [], promotedId: null };
+      const strandedModels = JSON.stringify(data.state.learning.models);
+      const strandedRounds = data.state.learning.rounds;
+      await reloadReferenceFrame();
+      assert(!data.state.baseline && !data.state.parents[0].artists.length && strandedRounds > 0
+        && ref$('#baselineHint').textContent.includes('第一張讚好'), '已有學習但沒有起點的舊進度保留分數，提示首次提交會建立起點');
+      refClick('#generateButton');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'stranded batch ready');
+      refClick('.candidate:nth-child(3) [data-action="like"]');
+      await until(() => data.state.selectedIds.length === 1, 'cold-start like marked');
+      refClick('#ignoreBatchButton');
+      await until(() => data.pending, 'cold-start ignore submitted');
+      assert(!data.state.baseline && !data.state.parents[0].artists.length && data.state.votes.at(-1).comparisonCount === 0,
+        '沒有基準時忽略不採用已讚好卡，也不捏造勝負');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#dislikeAllButton').disabled, 'cold-start reject ready');
+      refClick('#dislikeAllButton');
+      await until(() => data.pending, 'cold-start reject submitted');
+      assert(!data.state.baseline && data.state.votes.at(-1).comparisonCount === 0
+        && data.state.learning.rounds === strandedRounds && JSON.stringify(data.state.learning.models) === strandedModels,
+        '沒有基準時全不喜歡不選爛圖作起點，已有學習不重設');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'automatic first baseline ready');
+      const automaticBaseline = structuredClone(data.state.currentBatch[2]);
+      for (const [index, position] of [3, 1, 2, 4, 5].entries()) {
+        refClick('.candidate:nth-child(' + position + ') [data-action="like"]');
+        await until(() => data.state.selectedIds.length === index + 1, 'initial multi-like marked');
+      }
+      const beforeAutomaticVote = JSON.stringify(data.state);
+      const beforeAutomaticRequests = data.requests.length;
+      data.failVote = true;
+      refClick('#submitVoteButton');
+      await until(() => !ref$('#submitVoteButton').disabled && ref$('#statusText').textContent.includes('保存失敗'), 'automatic baseline write failure');
+      assert(JSON.stringify(data.state) === beforeAutomaticVote && data.requests.length === beforeAutomaticRequests,
+        '首次自動起點保存失敗不改基準、不扣分、不發送下一批，可安全重試');
+      data.failVote = false;
+      refClick('#submitVoteButton');
+      await until(() => data.pending, 'automatic baseline committed');
+      assert(data.state.baseline.id === automaticBaseline.id && data.state.parents[0].id === automaticBaseline.genome.id
+        && data.state.baseline.blob instanceof refWin.Blob && data.state.baseline.contextKey === automaticBaseline.contextKey,
+        '未按晉升也能在首次提交建立完整基準，採用第一張點讚而非卡牌位置');
+      assert(data.state.votes.at(-1).promotedId === null && data.state.votes.at(-1).comparisonCount === 0
+        && data.state.learning.rounds === strandedRounds && JSON.stringify(data.state.learning.models) === strandedModels,
+        '建立首次起點不假稱晉升，不替多張讚好排序，也不丟失舊模型');
+      assert(data.state.currentBatch.slice(0, 4).every(item => item.genome.mutation.operation !== 'explore'
+        && item.genome.parentIds.includes(automaticBaseline.genome.id))
+        && !ref$('#baselinePreview').hidden, '下一批四張偏好牌確實使用讚好起點，不再永遠停在初始探索');
+      for (let i = 0; i < 5; i++) await answer();
+      await until(() => !ref$('#ignoreBatchButton').disabled, 'existing automatic baseline ready');
+      refClick('.candidate [data-action="like"]');
+      await until(() => data.state.selectedIds.length === 1, 'ordinary subsequent like marked');
+      refClick('#submitVoteButton');
+      await until(() => data.pending, 'ordinary subsequent like submitted');
+      assert(data.state.baseline.id === automaticBaseline.id && data.state.learning.rounds === strandedRounds + 1,
+        '之後普通讚好只更新學習，不會取代保留的最佳基準');
+      refClick('#stopButton');
+      await until(() => !ref$('#generateButton').hidden, 'automatic baseline test stopped');
+      await reloadReferenceFrame();
+      assert(data.state.baseline.id === automaticBaseline.id && data.state.parents[0].id === automaticBaseline.genome.id
+        && data.state.learning.rounds === strandedRounds + 1 && data.favorites.size === 50,
+        '重新載入仍保留新起點、既有模型與五十張收藏');
       // Exercise the production IndexedDB adapter under a unique, disposable database name.
       const databaseName = 'novelai_style_evolver_test_' + crypto.randomUUID();
       const storageSource = await (await fetch(new URL('src/storage.js', root))).text();

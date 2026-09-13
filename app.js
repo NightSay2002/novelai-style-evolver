@@ -772,7 +772,7 @@ function renderCandidates({ animate = false } = {}) {
     const promoteButton = card.querySelector('[data-action="promote"]');
     const promoted = state.promotedId === candidate.id;
     promoteButton.textContent = promoted ? "提交時晉升 ✓" : sameContext(state.baseline, candidate) ? "比基準更好" : "設為目前最佳";
-    promoteButton.title = "提交後設為主要起點；讚好本身不會取代基準";
+    promoteButton.title = state.baseline ? "提交後設為主要起點；普通讚好不會取代基準" : "可指定首次起點；未指定時採用第一張讚好的圖";
     promoteButton.setAttribute("aria-pressed", String(promoted));
     promoteButton.disabled = !success || generating || submitting;
     const selectButton = card.querySelector('[data-action="select"]');
@@ -821,7 +821,7 @@ function renderBaseline() {
     else elements.baselineImage.removeAttribute("src");
   }
   elements.baselinePreview.hidden = !baselineUrl;
-  elements.baselineHint.textContent = !record ? "讚好用於學習；另選一張設為最佳起點。"
+  elements.baselineHint.textContent = !record ? "首次提交以第一張讚好的圖建立起點；也可另行指定。"
     : state.currentBatch.length && !sameContext(record, state.currentBatch[0]) ? "不同生成設定 · 僅供參考，不計勝負"
       : "保留此起點，直到你選出更好的圖。";
 }
@@ -1069,10 +1069,13 @@ async function submitVote(selectedIds, dislikedIds, action = "vote") {
       baseline: state.baseline, promotedId, action, eventId: state.currentBatch[0].id
     });
     let baseline = state.baseline;
-    if (promotedId) {
-      const record = currentImages.get(promotedId) || (await getImages()).find((item) => item.id === promotedId);
-      if (!record?.blob) throw new Error("找不到要晉升的圖片，偏好尚未提交，請重新載入。");
-      baseline = { ...record, contextKey: findCandidate(promotedId).contextKey, thumbnailBlob: await thumbnailFor(record, 160) };
+    // The first like supplies a starting reference, not a ranking among liked cards.
+    // Once established, only an explicit promotion may replace the baseline.
+    const startingId = promotedId || (!baseline && action === "vote" ? selectedIds.find((id) => findCandidate(id)?.status === "success") : null);
+    if (startingId) {
+      const record = currentImages.get(startingId) || (await getImages()).find((item) => item.id === startingId);
+      if (!record?.blob) throw new Error("找不到起點圖片，偏好尚未提交，請重新載入。");
+      baseline = { ...record, contextKey: findCandidate(startingId).contextKey, thumbnailBlob: await thumbnailFor(record, 160) };
     }
     const vote = {
       id: uid("vote"), batchNumber: state.batchNumber, batchId: state.currentBatch[0].batchId,
