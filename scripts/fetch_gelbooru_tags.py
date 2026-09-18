@@ -24,6 +24,7 @@ API_URL = "https://gelbooru.com/index.php"
 PAGE_SIZE = 100
 TYPE_ARTIST = 1
 TYPE_METADATA = 5
+DEFAULT_ARTIST_THRESHOLD = 150
 
 
 def load_dotenv(path: Path) -> None:
@@ -118,11 +119,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--delay", type=float, default=1.0, help="每次 API 請求後等待秒數")
     parser.add_argument("--start-page", type=int, default=0)
-    parser.add_argument("--max-pages", type=int, default=0, help="0 代表直到 count <= threshold")
+    parser.add_argument("--max-pages", type=int, default=0, help="0 代表抓到所有門檻都已涵蓋")
     parser.add_argument("--threshold", type=int, default=50)
+    parser.add_argument("--artist-threshold", type=int, default=DEFAULT_ARTIST_THRESHOLD,
+                        help="畫師最低作品數（包含此數值，預設 150）")
     parser.add_argument("--workers", type=int, default=1, choices=range(1, 9))
     parser.add_argument("--rebuild-style", action="store_true", help="只由現有 raw metadata 重建風格詞")
     args = parser.parse_args()
+    lowest_required_count = min(args.artist_threshold, args.threshold + 1)
 
     if args.rebuild_style:
         raw_path = DATA_DIR / "metadata-tags.raw.json"
@@ -150,8 +154,14 @@ def main() -> int:
         checkpoint.update(json.loads(checkpoint_path.read_text(encoding="utf-8")))
 
     page = int(checkpoint.get("nextPage", args.start_page))
-    artists = dict(checkpoint.get("artists", {}))
-    metadata = dict(checkpoint.get("metadata", {}))
+    artists = {
+        name: record for name, record in checkpoint.get("artists", {}).items()
+        if int(record.get("postCount", 0)) >= args.artist_threshold
+    }
+    metadata = {
+        name: record for name, record in checkpoint.get("metadata", {}).items()
+        if int(record.get("postCount", 0)) > args.threshold
+    }
     fetched = 0
     done = False
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
@@ -169,28 +179,26 @@ def main() -> int:
                     break
                 for item in tags:
                     item_count = int(item.get("count", 0))
-                    if item_count <= args.threshold:
-                        continue
                     tag_type = int(item.get("type", -1))
                     name = str(item.get("name", "")).strip().lower()
                     if not name:
                         continue
                     record = {"id": int(item.get("id", 0)), "name": name, "postCount": item_count}
-                    if tag_type == TYPE_ARTIST:
+                    if tag_type == TYPE_ARTIST and item_count >= args.artist_threshold:
                         artists[name] = record
-                    elif tag_type == TYPE_METADATA:
+                    elif tag_type == TYPE_METADATA and item_count > args.threshold:
                         metadata[name] = record
 
                 page = current_page + 1
                 fetched += 1
                 lowest = min(int(item.get("count", 0)) for item in tags)
-                if fetched == 1 or fetched % 50 == 0 or lowest <= args.threshold:
+                if fetched == 1 or fetched % 50 == 0 or lowest < lowest_required_count:
                     print(
                         f"page={current_page} lowest={lowest} artists={len(artists)} metadata={len(metadata)}",
                         file=sys.stderr,
                         flush=True,
                     )
-                if lowest <= args.threshold or (args.max_pages and fetched >= args.max_pages):
+                if lowest < lowest_required_count or (args.max_pages and fetched >= args.max_pages):
                     done = True
                     break
             checkpoint = {"nextPage": page, "artists": artists, "metadata": metadata}
@@ -201,7 +209,7 @@ def main() -> int:
     artist_output = {
         "version": 1,
         "source": "https://gelbooru.com/index.php?page=dapi&s=tag&q=index",
-        "minimumPostCountExclusive": args.threshold,
+        "minimumPostCount": args.artist_threshold,
         "artists": [
             {
                 "tag": f"artist:{record['name']}",

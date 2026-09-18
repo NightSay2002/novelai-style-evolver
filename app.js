@@ -32,6 +32,7 @@ const STYLE_OVERRIDES_KEY = "novelai_style_evolver_style_overrides";
 const MOTION_KEY = "novelai_style_evolver_reduce_motion";
 const MUSIC_VOLUME_KEY = "novelai_style_evolver_music_volume";
 const STATE_VERSION = 4;
+const MIN_ARTIST_POST_COUNT = 150;
 
 const elements = Object.fromEntries([
   "statusText", "tokenStatus", "tokenInput", "rememberToken", "saveTokenButton", "clearTokenButton",
@@ -1645,13 +1646,13 @@ async function initialize() {
     loadJson("./data/artists.json", "./data/.gelbooru-checkpoint.json"),
     loadJson("./data/style-tags.json", "./data/style-tags.seed.json")
   ]);
-  artistPool = Array.isArray(artistsData.artists)
+  artistPool = (Array.isArray(artistsData.artists)
     ? artistsData.artists
     : Object.values(artistsData.artists || {}).map((item) => ({
       tag: `artist:${item.name}`,
       sourceTagId: item.id,
       postCount: item.postCount
-    }));
+    }))).filter((item) => Number(item.postCount) >= MIN_ARTIST_POST_COUNT);
   stylePool = stylesData.tags || [];
   for (let year = 2000; year <= 2026; year += 1) {
     const tag = `year ${year}`;

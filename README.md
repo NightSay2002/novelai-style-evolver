@@ -1,4 +1,4 @@
-從 52,266 位畫師中探索組合，透過喜歡／不喜歡學習偏好，找出你的 NovelAI 畫風。
+從 17,519 位作品數至少 150 的畫師中探索組合，透過喜歡／不喜歡學習偏好，找出你的 NovelAI 畫風。
 
 # NovelAI 畫風探索
 
@@ -37,7 +37,7 @@ python3 -m http.server 8080
 - 設定、圖片、偏好及收藏只保存在目前瀏覽器；清除網站資料會遺失，線上版與本機版不共用。
 - 歷史與收藏各上限 50 張；內容與設定修改從下一批生效。
 - 新版學習從中立開始，不刪圖片與收藏；舊儲存點缺少新版學習時會提示。組合分數只是估計，模擬結果不代表真實出圖品質保證。
-- 隨附畫師資料可直接使用，不需 Gelbooru／Danbooru 金鑰。只有重新收集資料才需依 `.env.example` 設定本機 `.env`，不要上傳金鑰。
+- 隨附畫師資料只保留 Gelbooru 可用作品數至少 150 的畫師，可直接使用，不需 Gelbooru／Danbooru 金鑰。只有重新收集資料才需依 `.env.example` 設定本機 `.env`，不要上傳金鑰。
 - 純靜態網站，GitHub Pages 從 `main` 根目錄發布，無後端。
 
 參考 [novelai-image-static](https://github.com/NightSay2002/novelai-image-static)（WTFPL v2）；標籤來源：Gelbooru、Danbooru。
