@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>NovelAI 畫風演化器</title>
-    <link rel="stylesheet" href="./styles.css?v=24" />
+    <link rel="stylesheet" href="./styles.css?v=25" />
   </head>
   <body>
     <svg class="icon-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +46,7 @@
     <main class="tabletop">
       <div class="batch-toolbar">
         <div><p class="eyebrow">STYLE EXPLORATION</p><h1 id="batchTitle">第 1 批</h1></div>
-        <aside class="baseline-panel" aria-label="目前最佳基準"><button id="baselinePreview" type="button" title="放大目前最佳，不影響選取" aria-label="放大目前最佳" hidden><img id="baselineImage" alt="目前最佳基準" decoding="async" /></button><div><strong>目前最佳</strong><p id="baselineHint">首次提交以第一張讚好的圖建立起點；也可另行指定。</p></div></aside>
+        <aside class="baseline-panel" aria-label="目前最佳基準"><button id="baselinePreview" type="button" title="放大目前最佳，不影響選取" aria-label="放大目前最佳" hidden><img id="baselineImage" alt="目前最佳基準" decoding="async" /></button><div class="baseline-copy"><strong>目前最佳</strong><p id="baselineHint">尚未建立圖片基準。</p></div><button id="customStartButton" type="button" class="baseline-start">輸入畫師起點</button></aside>
         <div class="batch-progress"><span class="progress-caption">候選畫風 <span id="progressText">0 / 5</span></span><progress id="batchProgress" max="5" value="0" aria-label="本批生成進度"></progress></div>
       </div>
       <section class="card-stage" aria-label="五個畫風候選">
@@ -118,6 +118,20 @@ ultra complexity, visual novel cg</textarea>
           <p class="hint">舊詞庫與設定保留作相容用途，不再參與生成抽取。</p>
           </div>
         </section>
+        <section data-panel-body="start" hidden>
+          <p class="section-intro">以最多 6 位畫師建立探索起點。輸入的數字權重會被忽略，每位畫師改為重新隨機抽取 0.1–2.0。</p>
+          <label for="startingArtists" class="field-label">畫師起點</label>
+          <textarea id="startingArtists" rows="7" spellcheck="false" placeholder="1.0::artist:mashiro_shiki::,
+0.8::artist:minusk9::,
+procrastinator39"></textarea>
+          <button id="applyStartingArtistsButton" type="button" class="secondary full">套用畫師起點</button>
+          <p class="hint">名稱一律正規化為 <code>artist:名稱</code>。不在目前門檻資料池的名稱仍視為有效，只加入本次探索；每位起始偏好分增加 1。</p>
+          <div class="section-divider"></div>
+          <label for="artistThreshold" class="field-label">共用畫師池作品數門檻</label>
+          <input id="artistThreshold" type="number" min="50" step="1" value="150" list="artistThresholdPresets" inputmode="numeric" />
+          <datalist id="artistThresholdPresets"><option value="50"></option><option value="100"></option><option value="150"></option></datalist>
+          <p id="artistThresholdStatus" class="hint" role="status">預設 150；最低 50，不設上限。</p>
+        </section>
         <section data-panel-body="settings" hidden>
           <div class="section-heading"><h3>NovelAI Token</h3><span id="tokenStatus" class="token-status">未設定</span></div>
           <input id="tokenInput" type="password" aria-label="NovelAI Token" autocomplete="off" spellcheck="false" placeholder="Persistent API Token" />
@@ -171,6 +185,6 @@ ultra complexity, visual novel cg</textarea>
       <div class="preview-actions"><button id="previewFavorite" type="button" class="favorite-button secondary" aria-label="收藏目前圖片" aria-pressed="false" hidden disabled><svg><use href="#i-star"/></svg><span>收藏</span></button></div>
       <details class="preview-details"><summary>完整 Prompt 與 Negative Prompt</summary><pre id="dialogPrompt"></pre></details>
     </dialog>
-    <script type="module" src="./app.js?v=32"></script>
+    <script type="module" src="./app.js?v=33"></script>
   </body>
 </html>

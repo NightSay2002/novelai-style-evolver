@@ -14,7 +14,7 @@ SPEC.loader.exec_module(MODULE)
 class GelbooruTagTests(unittest.TestCase):
     def test_prompt_tag(self):
         self.assertEqual(MODULE.prompt_tag("Watercolor_(Medium)"), "watercolor (medium)")
-        self.assertEqual(MODULE.DEFAULT_ARTIST_THRESHOLD, 150)
+        self.assertEqual(MODULE.DEFAULT_ARTIST_THRESHOLD, 50)
 
     def test_style_output_only_accepts_curated_seed_tags(self):
         metadata = {

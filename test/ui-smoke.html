@@ -184,6 +184,24 @@
       assert($('#styleDatabase').hidden, '關閉並隱藏風格抽取介面');
       const fixedQuality = parseStylePrompt($('#seedStylePrompt').value);
       click('#controlsDrawer [data-close-drawer]');
+      click('#customStartButton');
+      assert($('#controlsDrawer').open && !$('[data-panel-body="start"]').hidden && $('#artistThreshold').min === '50' && !$('#artistThreshold').hasAttribute('max'), '目前最佳旁可開啟畫師起點，門檻最低 50 且無上限');
+      $('#artistThreshold').value = '100';
+      $('#artistThreshold').dispatchEvent(new win.Event('change', { bubbles: true }));
+      assert($('#artistThresholdStatus').textContent.includes('目前門檻 100') && JSON.parse(data.local.get('novelai_style_evolver_settings')).artistPostCount === 100, '自訂作品數門檻即時篩選並保存在瀏覽器');
+      change('#startingArtists', '99::artist:Mashiro_Shiki::, -9::artist:dhfddf::, procrastinator39');
+      click('#applyStartingArtistsButton');
+      await until(() => data.state?.customArtists?.length === 3 && !$('#controlsDrawer').open, 'custom start applied');
+      assert(data.state.parents[0].artists.map(item => item.tag).join(',') === 'artist:mashiro_shiki,artist:dhfddf,artist:procrastinator39'
+        && data.state.parents[0].artists.every(item => item.weight >= 0.1 && item.weight <= 2)
+        && data.state.learning.models.every(model => data.state.parents[0].artists.every(item => model['a:' + item.tag] === 0.1)), '自選起點忽略輸入權重、正規化 artist: 標籤、接受未知畫師並給初始偏好 +1');
+      assert($('#baselineHint').textContent.includes('自選起點') && $('#customStartButton').textContent === '更換畫師起點', '卡桌顯示自選起點摘要及更換入口');
+      click('#resetButton');
+      await until(() => data.state && !data.state.customArtists.length && !data.state.parents[0].artists.length, 'custom start reset');
+      click('#customStartButton');
+      $('#artistThreshold').value = '150';
+      $('#artistThreshold').dispatchEvent(new win.Event('change', { bubbles: true }));
+      click('#controlsDrawer [data-close-drawer]');
       await until(() => !$('#anlasButton').disabled && $('#anlasBalance').textContent === '166,125', 'initial Anlas balance');
       assert($('#anlasButton').closest('.header-left') && $('#anlasButton').title.includes('156,125'), 'Anlas 在左上角顯示真實合計與兩種餘額提示');
       assert(!$('.header-actions [data-panel="settings"]') && !$('#modelLabel') && $('.tool-rail [data-panel="settings"]'), '移除右上角重複設定入口，左側模型及生成設定仍可使用');
@@ -206,7 +224,7 @@
       assert(!$('.candidate input[type="checkbox"]'), '卡片已移除小方格');
       assert($('.candidate [data-action="favorite"] use').getAttribute('href') === '#i-star' && $('[data-drawer-library="favorites"] use').getAttribute('href') === '#i-star', '卡片與側欄收藏都使用星星');
       assert($('.candidate [data-action="like"] use').getAttribute('href') === '#i-like', '獨立讚好按鈕使用正讚圖示');
-      assert(!$('#batchHint') && $('#statusText').hidden && $('#selectionSummary').hidden, '初始卡桌不顯示口號或資料載入數量');
+      assert(!$('#batchHint') && $('#selectionSummary').hidden, '初始卡桌不顯示口號或資料載入數量');
       assert($('#ignoreBatchButton').hidden && $('#ignoreBatchButton').disabled, '未生成時隱藏並停用忽略本批');
       assert(!$('#image2ImageEnabled').checked && $('#image2ImageEnabled').disabled && $('#referencePreview').hidden, 'Image2Image 預設關閉，沒有參考圖不能啟用');
       click('[data-panel="content"]');
@@ -1224,7 +1242,7 @@
       const strandedRounds = data.state.learning.rounds;
       await reloadReferenceFrame();
       assert(!data.state.baseline && !data.state.parents[0].artists.length && strandedRounds > 0
-        && ref$('#baselineHint').textContent.includes('第一張讚好'), '已有學習但沒有起點的舊進度保留分數，提示首次提交會建立起點');
+        && ref$('#baselineHint').textContent.includes('尚未建立圖片基準'), '已有學習但沒有起點的舊進度保留分數，提示尚未建立圖片基準');
       refClick('#generateButton');
       for (let i = 0; i < 5; i++) await answer();
       await until(() => !ref$('#ignoreBatchButton').disabled, 'stranded batch ready');

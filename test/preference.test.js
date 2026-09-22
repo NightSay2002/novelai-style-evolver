@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { performance } from "node:perf_hooks";
-import { applyPreferenceVote, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceFeatures, preferenceRanking, predictPreference, redistributeWeights } from "../src/preference.js";
+import { applyPreferenceVote, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceFeatures, preferenceRanking, predictPreference, redistributeWeights, seedArtistPreferences } from "../src/preference.js";
 
 function random(seed = 1) {
   let value = seed >>> 0;
@@ -10,6 +10,22 @@ function random(seed = 1) {
 const artist = (tag, weight = 1, pinned = false) => ({ tag: `artist:${tag}`, weight, pinned, polarity: "positive" });
 const genome = (...artists) => ({ artists, styleTerms: [], id: "parent" });
 const card = (id, value, contextKey = "same") => ({ id, genome: value, status: "success", contextKey });
+
+test("custom starting artists receive an additive +1 preference and rank without fake comparisons", () => {
+  const original = createLearning();
+  const seeded = seedArtistPreferences(original, ["artist:known", "artist:unknown"], 1);
+  assert.deepEqual(original, createLearning());
+  for (const tag of ["artist:known", "artist:unknown"]) {
+    assert.equal(predictPreference(genome({ tag, weight: 1 }), seeded).score, 0.1);
+    assert.equal(seeded.artists[tag].comparisons, 0);
+  }
+  assert.deepEqual(preferenceRanking(seeded).map(({ tag, score, rounds, evidence }) => ({ tag, score, rounds, evidence })), [
+    { tag: "artist:known", score: 1, rounds: 0, evidence: "自選起點" },
+    { tag: "artist:unknown", score: 1, rounds: 0, evidence: "自選起點" }
+  ]);
+  const twice = seedArtistPreferences(seeded, ["artist:known"], 1);
+  assert.equal(preferenceRanking(twice).find((item) => item.tag === "artist:known").score, 2);
+});
 
 test("comparison fingerprint isolates all effective inputs and excludes credentials / filenames", async () => {
   const settings = { contentPrompt: "solo", negativePrompt: "text", seedStylePrompt: "quality", generationSettings: { model: "v5", seed: 1, width: 832 } };

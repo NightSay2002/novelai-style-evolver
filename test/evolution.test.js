@@ -6,6 +6,8 @@ import {
   artistCountRange,
   generateBatch,
   genomeFeatureKeys,
+  makeStartingArtists,
+  parseArtistInput,
   parseStylePrompt,
   serializeGenome,
   STYLE_TERM_MIN,
@@ -75,6 +77,16 @@ const stylePool = [
 ];
 
 const artists = Array.from({ length: 30 }, (_, index) => ({ tag: `artist:test_${index + 1}` }));
+
+test("custom artist starts ignore typed weights, normalize tags and draw fresh weights", () => {
+  assert.deepEqual(parseArtistInput("1.0::artist:Mashiro_Shiki::, 0.8::artist:minusk9 ::\nprocrastinator39, dhfddf"), [
+    "artist:mashiro_shiki", "artist:minusk9", "artist:procrastinator39", "artist:dhfddf"
+  ]);
+  const starting = makeStartingArtists("0.1::artist:known::, 2.0::artist:unknown::", () => 0.49);
+  assert.deepEqual(starting.map((item) => item.tag), ["artist:known", "artist:unknown"]);
+  assert(starting.every((item) => item.weight === 1 && item.weight >= 0.1 && item.weight <= 2));
+  assert.throws(() => parseArtistInput("a,b,c,d,e,f,g"), /最多 6 位/u);
+});
 
 test("three preference extensions change one artist or 1–2 weights and never shrink the preferred core", () => {
   const rng = seededRandom(321);

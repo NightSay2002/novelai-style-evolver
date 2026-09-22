@@ -71,6 +71,37 @@ export function splitPromptTokens(prompt = "") {
   return result;
 }
 
+export function parseArtistInput(prompt = "", limit = 6) {
+  const tags = [];
+  const seen = new Set();
+  const tokens = splitPromptTokens(String(prompt).replace(/\r?\n/gu, ","));
+  for (const raw of tokens) {
+    let value = raw.trim();
+    const numerical = value.match(/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)\s*::([\s\S]*?)::\s*$/u);
+    if (numerical) value = numerical[1].trim();
+    value = value.replace(/^artist\s*:\s*/iu, "").replace(/::\s*$/u, "").trim();
+    if (!value) continue;
+    const name = value.replace(/\s+/gu, "_").toLowerCase();
+    if (name.length > 200) throw new Error("畫師名稱不可超過 200 個字元。");
+    const tag = `artist:${name}`;
+    if (seen.has(tag)) continue;
+    if (tags.length >= limit) throw new Error(`畫師起點最多 ${limit} 位。`);
+    seen.add(tag);
+    tags.push(tag);
+  }
+  return tags;
+}
+
+export function makeStartingArtists(prompt = "", rng = Math.random) {
+  return parseArtistInput(prompt).map((tag) => ({
+    tag,
+    category: "artist",
+    polarity: "positive",
+    weight: randomInt(1, 20, rng) / 10,
+    pinned: false
+  }));
+}
+
 function inferCategory(tag, styleLookup = new Map()) {
   const known = styleLookup.get(tag.toLowerCase());
   if (known?.category) return known.category;

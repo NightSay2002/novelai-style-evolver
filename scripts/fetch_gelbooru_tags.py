@@ -24,7 +24,7 @@ API_URL = "https://gelbooru.com/index.php"
 PAGE_SIZE = 100
 TYPE_ARTIST = 1
 TYPE_METADATA = 5
-DEFAULT_ARTIST_THRESHOLD = 150
+DEFAULT_ARTIST_THRESHOLD = 50
 
 
 def load_dotenv(path: Path) -> None:
@@ -122,7 +122,7 @@ def main() -> int:
     parser.add_argument("--max-pages", type=int, default=0, help="0 代表抓到所有門檻都已涵蓋")
     parser.add_argument("--threshold", type=int, default=50)
     parser.add_argument("--artist-threshold", type=int, default=DEFAULT_ARTIST_THRESHOLD,
-                        help="畫師最低作品數（包含此數值，預設 150）")
+                        help="收集進資料檔的畫師最低作品數（包含此數值，預設 50）")
     parser.add_argument("--workers", type=int, default=1, choices=range(1, 9))
     parser.add_argument("--rebuild-style", action="store_true", help="只由現有 raw metadata 重建風格詞")
     args = parser.parse_args()

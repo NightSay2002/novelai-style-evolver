@@ -20,6 +20,19 @@ export function compatibleLearning(value) {
     && Array.isArray(value.recentEvents) && Number.isSafeInteger(value.rounds);
 }
 
+export function seedArtistPreferences(learning, tags, score = 1) {
+  const next = structuredClone(compatibleLearning(learning) ? learning : createLearning());
+  const delta = clamp(Number(score) || 0, -60, 60) / 10;
+  for (const tag of new Set(tags.map(tagKey))) {
+    if (!tag.startsWith("artist:")) continue;
+    const stat = next.artists[tag] ||= { appearances: 0, comparisons: 0, independent: 0 };
+    stat.seeded = true;
+    stat.seededScore = (stat.seededScore || 0) + score;
+    for (const model of next.models) model[`a:${tag}`] = clamp((model[`a:${tag}`] || 0) + delta, -6, 6);
+  }
+  return next;
+}
+
 // Whitelist only generation inputs. Never hash/store tokens, filenames or UI state.
 export async function comparisonContext(settings, image2Image = null, references = null) {
   const inputs = {
@@ -189,8 +202,9 @@ export function preferenceRanking(learning, limit = 20) {
   return Object.entries(learning.artists).map(([tag, stat]) => ({
     tag, score: mean(learning.models.map((model) => model[`a:${tag}`] || 0)) * 10,
     rounds: stat.comparisons, independent: stat.independent,
-    evidence: stat.independent >= 3 ? "有比較依據" : "待確認"
-  })).filter((item) => item.rounds > 0).sort((a, b) => b.score - a.score || b.independent - a.independent || a.tag.localeCompare(b.tag)).slice(0, limit);
+    evidence: stat.independent >= 3 ? "有比較依據" : stat.seeded ? "自選起點" : "待確認",
+    seeded: Boolean(stat.seeded)
+  })).filter((item) => item.rounds > 0 || item.seeded).sort((a, b) => b.score - a.score || b.independent - a.independent || a.tag.localeCompare(b.tag)).slice(0, limit);
 }
 
 export function redistributeWeights(artists, rng = Math.random) {

@@ -181,6 +181,7 @@ dialog::backdrop { background: #07070c80; backdrop-filter: blur(5px); }
 .drawer h3 .muted { margin-left: 8px; font-size: 10px; font-weight: 400; }
 .muted, .hint { color: var(--muted); }
 .hint { font-size: 10px; line-height: 1.8; margin: 10px 0 0; }
+.hint.is-error { color: var(--danger); }
 .section-intro { font-size: 12px; color: #aba5b8; margin-bottom: 23px; }
 .field-label, .prompt-panel label { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; }
 .prompt-panel label span { font-size: 10px; color: #8c849c; }
@@ -340,9 +341,11 @@ dialog::backdrop { background: #07070c80; backdrop-filter: blur(5px); }
 .style-layer-label { display: block; font-size: 10px; color: #a49abb; margin-top: 2px; }
 #styleLayerFilter { margin-top: 8px; }
 /* Comparison tools stay compact; the five generated images keep the stage. */
-.baseline-panel { display: flex; align-items: center; gap: 10px; max-width: 340px; margin-left: auto; padding: 6px 12px; border: 1px solid #bba2ef45; border-radius: 12px; background: #191522a8; }
+.baseline-panel { display: flex; align-items: center; gap: 10px; max-width: 460px; margin-left: auto; padding: 6px 8px 6px 12px; border: 1px solid #bba2ef45; border-radius: 12px; background: #191522a8; }
+.baseline-copy { min-width: 0; }
 .baseline-panel strong { font-size: 12px; color: #ddcdf9; }
 .baseline-panel p { font-size: 11px; line-height: 1.4; margin: 3px 0 0; color: #aaa1b5; }
+.baseline-start { flex: 0 0 auto; min-height: 30px; padding: 6px 9px; border-color: #bda3ea55; background: #21182c; color: #d8c7f4; font-size: 10px; }
 #baselinePreview { flex: 0 0 auto; padding: 0; width: 40px; height: 52px; overflow: hidden; border-radius: 5px; }
 #baselineImage { width: 100%; height: 100%; object-fit: contain; }
 .candidate-strategy { display: flex; align-items: center; justify-content: space-between; gap: 4px; position: relative; z-index: 2; margin: 5px 0; min-width: 0; }
@@ -356,11 +359,12 @@ dialog::backdrop { background: #07070c80; backdrop-filter: blur(5px); }
 .ranking-table td:nth-child(2) { overflow-wrap: anywhere; }
 .ranking-table td:last-child { white-space: nowrap; color: #b8a9cc; }
 @media (max-width: 800px) {
-  .baseline-panel { max-width: 210px; padding: 5px 8px; }
-  .baseline-panel p { max-width: 135px; font-size: 10px; }
+  .baseline-panel { max-width: 290px; padding: 5px 7px; }
+  .baseline-panel p { max-width: 105px; font-size: 10px; }
   .batch-toolbar .batch-progress { display: none; }
 }
 @media (max-width: 440px) {
-  .baseline-panel { max-width: 180px; }
+  .baseline-panel { max-width: 205px; }
+  .baseline-copy { display: none; }
   #baselinePreview { width: 30px; height: 42px; }
 }
