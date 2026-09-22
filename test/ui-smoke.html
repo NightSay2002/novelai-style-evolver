@@ -192,16 +192,25 @@
       change('#startingArtists', '99::artist:Mashiro_Shiki::, -9::artist:dhfddf::, procrastinator39');
       click('#applyStartingArtistsButton');
       await until(() => data.state?.customArtists?.length === 3 && !$('#controlsDrawer').open, 'custom start applied');
+      const normalizedArtistStart = $('#startingArtists').value;
+      const startingArtistSnapshot = JSON.stringify(data.state.parents[0].artists);
       assert(data.state.parents[0].artists.map(item => item.tag).join(',') === 'artist:mashiro_shiki,artist:dhfddf,artist:procrastinator39'
         && data.state.parents[0].artists.every(item => item.weight >= 0.1 && item.weight <= 2)
         && data.state.learning.models.every(model => data.state.parents[0].artists.every(item => model['a:' + item.tag] === 0.1)), '自選起點忽略輸入權重、正規化 artist: 標籤、接受未知畫師並給初始偏好 +1');
+      assert(normalizedArtistStart.includes('artist:mashiro_shiki') && normalizedArtistStart.includes('artist:dhfddf')
+        && !normalizedArtistStart.includes('99::') && !normalizedArtistStart.includes('-9::'), '套用後欄位改寫成實際隨機權重的正規畫師 Prompt');
       assert($('#baselineHint').textContent.includes('自選起點') && $('#customStartButton').textContent === '更換畫師起點', '卡桌顯示自選起點摘要及更換入口');
       click('#resetButton');
-      await until(() => data.state && !data.state.customArtists.length && !data.state.parents[0].artists.length, 'custom start reset');
+      await until(() => data.state && data.state.customArtists?.length === 3 && !data.state.currentBatch.length, 'custom start reset');
+      assert(JSON.stringify(data.state.parents[0].artists) === startingArtistSnapshot && $('#startingArtists').value === normalizedArtistStart
+        && data.state.learning.models.every(model => data.state.parents[0].artists.every(item => model['a:' + item.tag] === 0.1)), '重新開始探索保留自選起點、隨機權重與正規內容，偏好重新由 +1 開始');
       click('#customStartButton');
       $('#artistThreshold').value = '150';
       $('#artistThreshold').dispatchEvent(new win.Event('change', { bubbles: true }));
       click('#controlsDrawer [data-close-drawer]');
+      click('[data-panel="style"]');
+      click('#applySeedButton');
+      await until(() => !data.state.customStart && !data.state.parents[0].artists.length, 'custom start cleared for remaining tests');
       await until(() => !$('#anlasButton').disabled && $('#anlasBalance').textContent === '166,125', 'initial Anlas balance');
       assert($('#anlasButton').closest('.header-left') && $('#anlasButton').title.includes('156,125'), 'Anlas 在左上角顯示真實合計與兩種餘額提示');
       assert(!$('.header-actions [data-panel="settings"]') && !$('#modelLabel') && $('.tool-rail [data-panel="settings"]'), '移除右上角重複設定入口，左側模型及生成設定仍可使用');
@@ -1299,6 +1308,19 @@
       assert(data.state.baseline.id === automaticBaseline.id && data.state.parents[0].id === automaticBaseline.genome.id
         && data.state.learning.rounds === strandedRounds + 1 && data.favorites.size === 50,
         '重新載入仍保留新起點、既有模型與五十張收藏');
+      const learningBeforeBaselineDelete = JSON.stringify(data.state.learning);
+      const historyBeforeBaselineDelete = data.images.size;
+      assert(!ref$('#removeBaselineButton').hidden, '已有目前最佳時顯示刪除按鈕');
+      refClick('#removeBaselineButton');
+      await until(() => !data.state.baseline && ref$('#removeBaselineButton').hidden, 'baseline deleted and controls updated');
+      assert(data.state.parents[0].id === automaticBaseline.genome.id, '刪除目前最佳後沿用原畫師組合');
+      assert(JSON.stringify(data.state.learning) === learningBeforeBaselineDelete, '刪除目前最佳不改偏好學習');
+      assert(data.images.size === historyBeforeBaselineDelete, '刪除目前最佳不刪歷史圖片');
+      assert(ref$('#removeBaselineButton').hidden, '刪除目前最佳後隱藏刪除按鈕');
+      assert(ref$('#baselineHint').textContent.includes('沿用'), '刪除目前最佳後提示沿用畫師');
+      await reloadReferenceFrame();
+      assert(!data.state.baseline && data.state.parents[0].id === automaticBaseline.genome.id && ref$('#removeBaselineButton').hidden,
+        '刪除目前最佳後重新載入仍保持無圖片基準並沿用畫師組合');
       // Exercise the production IndexedDB adapter under a unique, disposable database name.
       const databaseName = 'novelai_style_evolver_test_' + crypto.randomUUID();
       const storageSource = await (await fetch(new URL('src/storage.js', root))).text();

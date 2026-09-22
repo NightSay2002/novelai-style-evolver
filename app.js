@@ -46,7 +46,7 @@ const elements = Object.fromEntries([
   "generationGuidance", "generationCfgRescale", "generationSettingsStatus", "generationModel", "modelSettingsHint",
   "generationNoiseSchedule", "generationVarietyPlus", "generationDecrisp", "generationSmea", "generationSmeaDyn", "generationAutoSmea", "generationLegacyUc",
   "vibePanel", "precisePanel",
-  "stylePoolList", "batchTitle", "progressText", "batchProgress", "candidateGrid", "baselinePreview", "baselineImage", "baselineHint", "customStartButton",
+  "stylePoolList", "batchTitle", "progressText", "batchProgress", "candidateGrid", "baselinePreview", "baselineImage", "baselineHint", "customStartButton", "removeBaselineButton",
   "startingArtists", "applyStartingArtistsButton", "artistThreshold", "artistThresholdStatus", "rankingBody", "rankingHint",
   "selectionSummary", "generationCost", "nextBatchCost", "stopButton", "ignoreBatchButton", "dislikeAllButton", "submitVoteButton", "generateButton",
   "resetButton", "libraryGrid", "imageDialog", "closeDialogButton", "dialogImage", "dialogPrompt", "previewPrevious", "previewNext", "previewPosition", "previewFavorite",
@@ -87,7 +87,8 @@ let state = {
   dislikedIds: [],
   votes: [],
   forceExplore: false,
-  customArtists: []
+  customArtists: [],
+  customStart: null
 };
 let generating = false;
 let submitting = false;
@@ -850,6 +851,7 @@ function renderCandidates({ animate = false } = {}) {
 function renderBaseline() {
   const record = state.baseline;
   const startingArtists = !record ? state.parents[0]?.artists || [] : [];
+  const isCustomStart = !record && state.customStart?.id && state.parents[0]?.id === state.customStart.id;
   if (baselineUrlId !== record?.id) {
     if (baselineUrl) URL.revokeObjectURL(baselineUrl);
     baselineUrl = record?.blob ? URL.createObjectURL(record.thumbnailBlob || record.blob) : null;
@@ -858,7 +860,9 @@ function renderBaseline() {
     else elements.baselineImage.removeAttribute("src");
   }
   elements.baselinePreview.hidden = !baselineUrl;
-  elements.baselineHint.textContent = !record && startingArtists.length ? `自選起點 · ${startingArtists.map((item) => item.tag.replace(/^artist:/u, "")).slice(0, 2).join("、")}${startingArtists.length > 2 ? ` ＋${startingArtists.length - 2}` : ""}`
+  elements.removeBaselineButton.hidden = !record;
+  elements.baselineHint.textContent = isCustomStart && startingArtists.length ? `自選起點 · ${startingArtists.map((item) => item.tag.replace(/^artist:/u, "")).slice(0, 2).join("、")}${startingArtists.length > 2 ? ` ＋${startingArtists.length - 2}` : ""}`
+    : !record && startingArtists.length ? `未設圖片基準 · 沿用 ${startingArtists.length} 位畫師組合`
     : !record ? "尚未建立圖片基準。"
     : state.currentBatch.length && !sameContext(record, state.currentBatch[0]) ? "不同生成設定 · 僅供參考，不計勝負"
       : "保留此起點，直到你選出更好的圖。";
@@ -927,6 +931,7 @@ function updateControls() {
   elements.applySeedButton.disabled = busy;
   elements.applyStartingArtistsButton.disabled = busy;
   elements.customStartButton.disabled = busy;
+  elements.removeBaselineButton.disabled = busy;
   elements.artistThreshold.disabled = busy;
   elements.resetButton.disabled = busy;
   elements.saveTokenButton.disabled = busy;
@@ -996,6 +1001,7 @@ async function prepareBatch() {
     batchNumber: state.batchNumber, stats: structuredClone(state.stats), votes: structuredClone(state.votes),
     learning: structuredClone(state.learning), baseline: structuredClone(state.baseline),
     customArtists: structuredClone(state.customArtists || []),
+    customStart: structuredClone(state.customStart || null),
     settings, image2Image: reference, referenceTools: tools, styleOverrides: structuredClone(styleOverrides)
   };
   saveSettings();
@@ -1202,6 +1208,7 @@ async function restoreSavePoint(record) {
       baseline: { ...record, thumbnailBlob: await thumbnailFor(record, 160) }, promotedId: null,
       parents: [structuredClone(record.genome)], votes: structuredClone(point.votes), forceExplore: false,
       customArtists: Array.isArray(point.customArtists) ? structuredClone(point.customArtists).slice(0, 6) : [],
+      customStart: point.customStart?.artists?.length ? structuredClone(point.customStart) : null,
       currentBatch: [], selectedIds: [], dislikedIds: [], batchImage2Image: null, batchReferences: null
     };
     settingsWritten = true;
@@ -1215,6 +1222,7 @@ async function restoreSavePoint(record) {
     releaseCandidateUrls();
     loadSettings();
     updateArtistPool();
+    elements.startingArtists.value = state.customStart ? serializeGenome({ artists: state.customStart.artists, styleTerms: [] }) : "";
     generationSettingsValid = true;
     elements.generationSettingsStatus.classList.remove("is-error");
     elements.generationSettingsStatus.textContent = "已還原儲存點設定，下一批生效。";
@@ -1449,6 +1457,7 @@ async function applyStartingArtists() {
     genome.artists = artists;
     state.parents = [genome];
     state.customArtists = customArtists;
+    state.customStart = structuredClone(genome);
     state.learning = seedArtistPreferences(state.learning, artists.map((item) => item.tag), 1);
     state.baseline = null;
     state.promotedId = null;
@@ -1458,6 +1467,7 @@ async function applyStartingArtists() {
     state.selectedIds = [];
     state.dislikedIds = [];
     state.batchNumber = 1;
+    elements.startingArtists.value = serializeGenome({ artists, styleTerms: [] });
     saveSettings();
     releaseCandidateUrls();
     updateArtistPool();
@@ -1467,6 +1477,23 @@ async function applyStartingArtists() {
     setStatus(`已套用 ${artists.length} 位畫師起點；NAI 權重已重新隨機抽取，每位初始偏好 +1。`);
   } catch (error) {
     setStatus(error.message || "無法套用畫師起點。", true);
+  }
+}
+
+async function removeBaseline() {
+  if (generating || submitting || referenceBusy || !initialized || !state.baseline) return;
+  const previous = { baseline: state.baseline, parents: state.parents, promotedId: state.promotedId };
+  try {
+    state.baseline = null;
+    state.parents = [structuredClone(previous.baseline.genome)];
+    state.promotedId = null;
+    await persistState();
+    renderCandidates();
+    setStatus("已刪除目前最佳圖片基準；畫師組合仍會繼續使用，下一次提交讚好可建立新基準。");
+  } catch (error) {
+    Object.assign(state, previous);
+    renderCandidates();
+    setStatus(error.message || "無法刪除目前最佳基準。", true);
   }
 }
 
@@ -1483,6 +1510,7 @@ async function applySeed() {
   state.dislikedIds = [];
   state.batchNumber = 1;
   state.customArtists = [];
+  state.customStart = null;
   saveSettings();
   releaseCandidateUrls();
   updateArtistPool();
@@ -1494,17 +1522,22 @@ async function applySeed() {
 
 async function resetExploration() {
   if (generating || submitting || referenceBusy || !initialized) return;
-  if (!window.confirm("清除目前演化分數、批次與未收藏歷史？內容、參考圖、Token、資料池和收藏會保留。")) return;
+  if (!window.confirm("清除目前演化分數、批次與未收藏歷史？自選畫師起點、內容、參考圖、Token、資料池和收藏會保留。")) return;
   await clearExplorationData();
   const terms = parseStylePrompt(elements.seedStylePrompt.value);
-  state = { version: STATE_VERSION, batchNumber: 1, stats: {}, learning: createLearning(), baseline: null, promotedId: null, parents: [makeInitialGenome(terms)], currentBatch: [], batchImage2Image: null, batchReferences: null, selectedIds: [], dislikedIds: [], votes: [], forceExplore: false, customArtists: [] };
+  const customStart = state.customStart?.artists?.length ? structuredClone(state.customStart) : null;
+  const customArtists = customStart ? structuredClone(state.customArtists || []) : [];
+  const learning = customStart ? seedArtistPreferences(createLearning(), customStart.artists.map((item) => item.tag), 1) : createLearning();
+  state = { version: STATE_VERSION, batchNumber: 1, stats: {}, learning, baseline: null, promotedId: null,
+    parents: [customStart || makeInitialGenome(terms)], currentBatch: [], batchImage2Image: null, batchReferences: null,
+    selectedIds: [], dislikedIds: [], votes: [], forceExplore: false, customArtists, customStart };
   releaseCandidateUrls();
   updateArtistPool();
   await persistState();
   renderCandidates();
   await renderLibrary();
   elements.controlsDrawer.close();
-  setStatus("探索資料已重設。 ");
+  setStatus(customStart ? "探索資料已重設；自選畫師起點與隨機權重已保留。" : "探索資料已重設。 ");
 }
 
 function syncDrawerButtons() {
@@ -1598,6 +1631,7 @@ function bindEvents() {
   elements.seedStylePrompt.addEventListener("input", saveSettings);
   elements.applySeedButton.addEventListener("click", applySeed);
   elements.customStartButton.addEventListener("click", () => openPanel("start"));
+  elements.removeBaselineButton.addEventListener("click", removeBaseline);
   elements.applyStartingArtistsButton.addEventListener("click", applyStartingArtists);
   elements.artistThreshold.addEventListener("change", saveArtistThreshold);
   elements.generateButton.addEventListener("click", generateBatchImages);
@@ -1757,15 +1791,23 @@ async function initialize() {
   if (restored?.parents?.length && restored.version === STATE_VERSION) {
     state = restored;
     state.customArtists = Array.isArray(restored.customArtists) ? restored.customArtists.slice(0, 6) : [];
+    state.customStart = restored.customStart?.artists?.length ? restored.customStart
+      : restored.parents[0]?.id?.startsWith("custom_start_") && state.customArtists.length ? structuredClone(restored.parents[0]) : null;
     state.currentBatch = state.currentBatch.map((item) => item.status === "loading" ? { ...item, status: "pending" } : item);
     state.dislikedIds = [...new Set(Array.isArray(restored.dislikedIds) ? restored.dislikedIds : [])]
       .filter((id) => state.currentBatch.some((item) => item.id === id && item.status === "success") && !state.selectedIds.includes(id));
   }
   else state.parents = [makeInitialGenome(parseStylePrompt(elements.seedStylePrompt.value))];
   const migratedLearning = !compatibleLearning(state.learning);
-  if (migratedLearning) { state.learning = createLearning(); state.stats = {}; state.baseline = null; }
+  if (migratedLearning) {
+    state.learning = state.customStart ? seedArtistPreferences(createLearning(), state.customStart.artists.map((item) => item.tag), 1) : createLearning();
+    state.stats = {};
+    state.baseline = null;
+  }
   state.baseline ||= null;
   state.customArtists ||= [];
+  state.customStart ||= null;
+  if (state.customStart) elements.startingArtists.value = serializeGenome({ artists: state.customStart.artists, styleTerms: [] });
   updateArtistPool();
   state.promotedId = state.currentBatch.some((item) => item.id === state.promotedId && item.status === "success" && state.selectedIds.includes(item.id)) ? state.promotedId : null;
   // Frozen legacy cards can still be compared within their original batch only.
