@@ -108,6 +108,8 @@ let anlasRefreshTimer = null;
 let anlas = null;
 const systemMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+const formatStartingArtists = (artists = []) => artists.map((item) => `${item.tag},`).join("\n");
+
 function reducedMotion() {
   return elements.reduceMotion.checked || systemMotion.matches;
 }
@@ -1222,7 +1224,7 @@ async function restoreSavePoint(record) {
     releaseCandidateUrls();
     loadSettings();
     updateArtistPool();
-    elements.startingArtists.value = state.customStart ? serializeGenome({ artists: state.customStart.artists, styleTerms: [] }) : "";
+    elements.startingArtists.value = state.customStart ? formatStartingArtists(state.customStart.artists) : "";
     generationSettingsValid = true;
     elements.generationSettingsStatus.classList.remove("is-error");
     elements.generationSettingsStatus.textContent = "已還原儲存點設定，下一批生效。";
@@ -1467,7 +1469,7 @@ async function applyStartingArtists() {
     state.selectedIds = [];
     state.dislikedIds = [];
     state.batchNumber = 1;
-    elements.startingArtists.value = serializeGenome({ artists, styleTerms: [] });
+    elements.startingArtists.value = formatStartingArtists(artists);
     saveSettings();
     releaseCandidateUrls();
     updateArtistPool();
@@ -1807,7 +1809,7 @@ async function initialize() {
   state.baseline ||= null;
   state.customArtists ||= [];
   state.customStart ||= null;
-  if (state.customStart) elements.startingArtists.value = serializeGenome({ artists: state.customStart.artists, styleTerms: [] });
+  if (state.customStart) elements.startingArtists.value = formatStartingArtists(state.customStart.artists);
   updateArtistPool();
   state.promotedId = state.currentBatch.some((item) => item.id === state.promotedId && item.status === "success" && state.selectedIds.includes(item.id)) ? state.promotedId : null;
   // Frozen legacy cards can still be compared within their original batch only.

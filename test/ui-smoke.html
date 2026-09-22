@@ -197,8 +197,8 @@
       assert(data.state.parents[0].artists.map(item => item.tag).join(',') === 'artist:mashiro_shiki,artist:dhfddf,artist:procrastinator39'
         && data.state.parents[0].artists.every(item => item.weight >= 0.1 && item.weight <= 2)
         && data.state.learning.models.every(model => data.state.parents[0].artists.every(item => model['a:' + item.tag] === 0.1)), '自選起點忽略輸入權重、正規化 artist: 標籤、接受未知畫師並給初始偏好 +1');
-      assert(normalizedArtistStart.includes('artist:mashiro_shiki') && normalizedArtistStart.includes('artist:dhfddf')
-        && !normalizedArtistStart.includes('99::') && !normalizedArtistStart.includes('-9::'), '套用後欄位改寫成實際隨機權重的正規畫師 Prompt');
+      assert(normalizedArtistStart === 'artist:mashiro_shiki,\nartist:dhfddf,\nartist:procrastinator39,',
+        '套用後欄位正規化為每行一個無權重的 artist:名稱');
       assert($('#baselineHint').textContent.includes('自選起點') && $('#customStartButton').textContent === '更換畫師起點', '卡桌顯示自選起點摘要及更換入口');
       click('#resetButton');
       await until(() => data.state && data.state.customArtists?.length === 3 && !data.state.currentBatch.length, 'custom start reset');
