@@ -106,8 +106,7 @@ movie tonal, cinematic shot, high complexity,
 -1::multiple views::, -1::simple illustration::,
 {{{detail background}}},
 ultra complexity, visual novel cg</textarea>
-          <button id="applySeedButton" type="button" class="secondary full">套用</button>
-          <p class="hint">只抽取畫師及畫師權重，質量詞固定、不隨機。修改從下一批生效，本批及重試不變。套用會重設父畫師與目前批次，保留分數和收藏。可留空。</p>
+          <p class="hint">只抽取畫師及畫師權重，質量詞固定、不隨機。輸入後自動保存，下一批生效；本批及重試不變。修改質量詞不會清除畫師起點或作品數門檻。可留空。</p>
           <div id="styleDatabase" hidden>
           <div class="section-divider"></div>
           <h3>風格詞資料庫</h3>
@@ -124,8 +123,7 @@ ultra complexity, visual novel cg</textarea>
           <textarea id="startingArtists" rows="7" spellcheck="false" placeholder="1.0::artist:mashiro_shiki::,
 0.8::artist:minusk9::,
 procrastinator39"></textarea>
-          <button id="applyStartingArtistsButton" type="button" class="secondary full">套用畫師起點</button>
-          <p class="hint">名稱一律正規化為 <code>artist:名稱</code>。不在目前門檻資料池的名稱仍視為有效，只加入本次探索；每位起始偏好分增加 1。</p>
+          <p class="hint">輸入完成並離開欄位後自動套用，名稱會正規化為每行一個 <code>artist:名稱,</code>。不在目前門檻資料池的名稱仍可使用，只加入本次探索；每位畫師的初始偏好分增加 1。留空並離開欄位可移除起點。</p>
           <div class="section-divider"></div>
           <label for="artistThreshold" class="field-label">共用畫師池作品數門檻</label>
           <input id="artistThreshold" type="number" min="50" step="1" value="150" list="artistThresholdPresets" inputmode="numeric" />
@@ -185,6 +183,6 @@ procrastinator39"></textarea>
       <div class="preview-actions"><button id="previewFavorite" type="button" class="favorite-button secondary" aria-label="收藏目前圖片" aria-pressed="false" hidden disabled><svg><use href="#i-star"/></svg><span>收藏</span></button></div>
       <details class="preview-details"><summary>完整 Prompt 與 Negative Prompt</summary><pre id="dialogPrompt"></pre></details>
     </dialog>
-    <script type="module" src="./app.js?v=35"></script>
+    <script type="module" src="./app.js?v=36"></script>
   </body>
 </html>

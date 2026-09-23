@@ -180,7 +180,8 @@
       assert($('.author-badge').getAttribute('href') === 'https://github.com/NightSay2002' && $('.author-badge').textContent === '作者：時分' && $('.author-badge use').getAttribute('href') === '#i-star', '作者連結與黄色星星替代本機工作室');
       assert(win.getComputedStyle($('.author-badge svg')).animationName === 'author-star-spin' && win.getComputedStyle($('.author-badge svg')).animationIterationCount === 'infinite', '作者星星持續旋轉');
       click('[data-panel="style"]');
-      assert($('label[for="seedStylePrompt"]').textContent === '質量詞' && $('#applySeedButton').textContent === '套用', '質量詞欄位及套用按鈕使用新名稱');
+      assert($('label[for="seedStylePrompt"]').textContent === '質量詞' && !$('#applySeedButton') && !$('#applyStartingArtistsButton'),
+        '質量詞與畫師起點不再需要套用按鈕');
       assert($('#styleDatabase').hidden, '關閉並隱藏風格抽取介面');
       const fixedQuality = parseStylePrompt($('#seedStylePrompt').value);
       click('#controlsDrawer [data-close-drawer]');
@@ -190,8 +191,8 @@
       $('#artistThreshold').dispatchEvent(new win.Event('change', { bubbles: true }));
       assert($('#artistThresholdStatus').textContent.includes('目前門檻 100') && JSON.parse(data.local.get('novelai_style_evolver_settings')).artistPostCount === 100, '自訂作品數門檻即時篩選並保存在瀏覽器');
       change('#startingArtists', '99::artist:Mashiro_Shiki::, -9::artist:dhfddf::, procrastinator39');
-      click('#applyStartingArtistsButton');
-      await until(() => data.state?.customArtists?.length === 3 && !$('#controlsDrawer').open, 'custom start applied');
+      $('#startingArtists').dispatchEvent(new win.Event('change', { bubbles: true }));
+      await until(() => data.state?.customArtists?.length === 3 && $('#startingArtists').value.startsWith('artist:mashiro_shiki,'), 'custom start automatically applied');
       const normalizedArtistStart = $('#startingArtists').value;
       const startingArtistSnapshot = JSON.stringify(data.state.parents[0].artists);
       assert(data.state.parents[0].artists.map(item => item.tag).join(',') === 'artist:mashiro_shiki,artist:dhfddf,artist:procrastinator39'
@@ -199,7 +200,12 @@
         && data.state.learning.models.every(model => data.state.parents[0].artists.every(item => model['a:' + item.tag] === 0.1)), '自選起點忽略輸入權重、正規化 artist: 標籤、接受未知畫師並給初始偏好 +1');
       assert(normalizedArtistStart === 'artist:mashiro_shiki,\nartist:dhfddf,\nartist:procrastinator39,',
         '套用後欄位正規化為每行一個無權重的 artist:名稱');
+      assert($('#controlsDrawer').open && $('#artistThreshold').value === '100', '畫師起點自動套用時仍可繼續修改門檻');
       assert($('#baselineHint').textContent.includes('自選起點') && $('#customStartButton').textContent === '更換畫師起點', '卡桌顯示自選起點摘要及更換入口');
+      const learningAfterFirstStart = JSON.stringify(data.state.learning);
+      $('#startingArtists').dispatchEvent(new win.Event('change', { bubbles: true }));
+      assert(JSON.stringify(data.state.parents[0].artists) === startingArtistSnapshot
+        && JSON.stringify(data.state.learning) === learningAfterFirstStart, '畫師名稱未變時不重新抽權重或重複增加初始偏好');
       click('#resetButton');
       await until(() => data.state && data.state.customArtists?.length === 3 && !data.state.currentBatch.length, 'custom start reset');
       assert(JSON.stringify(data.state.parents[0].artists) === startingArtistSnapshot && $('#startingArtists').value === normalizedArtistStart
@@ -209,8 +215,17 @@
       $('#artistThreshold').dispatchEvent(new win.Event('change', { bubbles: true }));
       click('#controlsDrawer [data-close-drawer]');
       click('[data-panel="style"]');
-      click('#applySeedButton');
-      await until(() => !data.state.customStart && !data.state.parents[0].artists.length, 'custom start cleared for remaining tests');
+      const originalQualityPrompt = $('#seedStylePrompt').value;
+      change('#seedStylePrompt', 'best quality, year 2025');
+      assert(data.state.customStart?.artists.length === 3 && JSON.stringify(data.state.parents[0].artists) === startingArtistSnapshot
+        && $('#artistThreshold').value === '150' && JSON.parse(data.local.get('novelai_style_evolver_settings')).seedStylePrompt === 'best quality, year 2025',
+        '質量詞自動保存且不清空畫師起點、隨機權重或門檻');
+      change('#seedStylePrompt', originalQualityPrompt);
+      click('#customStartButton');
+      change('#startingArtists', '');
+      $('#startingArtists').dispatchEvent(new win.Event('change', { bubbles: true }));
+      await until(() => !data.state.customStart && !data.state.parents[0].artists.length, 'empty custom start removed for remaining tests');
+      click('#controlsDrawer [data-close-drawer]');
       await until(() => !$('#anlasButton').disabled && $('#anlasBalance').textContent === '166,125', 'initial Anlas balance');
       assert($('#anlasButton').closest('.header-left') && $('#anlasButton').title.includes('156,125'), 'Anlas 在左上角顯示真實合計與兩種餘額提示');
       assert(!$('.header-actions [data-panel="settings"]') && !$('#modelLabel') && $('.tool-rail [data-panel="settings"]'), '移除右上角重複設定入口，左側模型及生成設定仍可使用');
@@ -271,7 +286,7 @@
       click('#generateButton');
       await until(() => data.pending, 'first request');
       const firstCard = $('.candidate');
-      assert($('#resetButton').disabled && $('#applySeedButton').disabled, '生成中禁止重設與套用基因');
+      assert($('#resetButton').disabled && $('#startingArtists').disabled, '生成中禁止重設與更換畫師起點');
       assert($('#generationCost').hidden && $('#nextBatchCost').hidden, '生成中隱藏原按鈕時，外部費用同步隱藏');
       assert(!firstCard.classList.contains('is-revealed'), '圖片到達前保持卡背');
       await answer();

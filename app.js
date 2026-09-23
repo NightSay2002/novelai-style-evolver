@@ -1,6 +1,7 @@
 import {
   makeInitialGenome,
   makeStartingArtists,
+  parseArtistInput,
   parseStylePrompt,
   serializeGenome
 } from "./src/evolution.js?v=13";
@@ -39,7 +40,7 @@ const DEFAULT_ARTIST_POST_COUNT = 150;
 const elements = Object.fromEntries([
   "statusText", "tokenStatus", "tokenInput", "rememberToken", "saveTokenButton", "clearTokenButton",
   "anlasButton", "anlasBalance", "anlasWarning",
-  "contentPrompt", "negativePrompt", "seedStylePrompt", "applySeedButton", "styleSearch", "styleLayerFilter",
+  "contentPrompt", "negativePrompt", "seedStylePrompt", "styleSearch", "styleLayerFilter",
   "image2ImageEnabled", "referenceFile", "referencePreview", "referenceInfo", "removeReferenceButton",
   "imageStrength", "imageNoise", "imageStrengthValue", "imageNoiseValue",
   "generationWidth", "generationHeight", "generationSeed", "generationSampler", "generationSteps",
@@ -47,7 +48,7 @@ const elements = Object.fromEntries([
   "generationNoiseSchedule", "generationVarietyPlus", "generationDecrisp", "generationSmea", "generationSmeaDyn", "generationAutoSmea", "generationLegacyUc",
   "vibePanel", "precisePanel",
   "stylePoolList", "batchTitle", "progressText", "batchProgress", "candidateGrid", "baselinePreview", "baselineImage", "baselineHint", "customStartButton", "removeBaselineButton",
-  "startingArtists", "applyStartingArtistsButton", "artistThreshold", "artistThresholdStatus", "rankingBody", "rankingHint",
+  "startingArtists", "artistThreshold", "artistThresholdStatus", "rankingBody", "rankingHint",
   "selectionSummary", "generationCost", "nextBatchCost", "stopButton", "ignoreBatchButton", "dislikeAllButton", "submitVoteButton", "generateButton",
   "resetButton", "libraryGrid", "imageDialog", "closeDialogButton", "dialogImage", "dialogPrompt", "previewPrevious", "previewNext", "previewPosition", "previewFavorite",
   "controlsDrawer", "drawerTitle", "libraryDrawer", "libraryTitle", "reduceMotion", "backgroundMusic", "musicButton", "musicVolume"
@@ -930,8 +931,7 @@ function updateControls() {
       costLabel.title = error.message;
     }
   }
-  elements.applySeedButton.disabled = busy;
-  elements.applyStartingArtistsButton.disabled = busy;
+  elements.startingArtists.disabled = busy;
   elements.customStartButton.disabled = busy;
   elements.removeBaselineButton.disabled = busy;
   elements.artistThreshold.disabled = busy;
@@ -1447,8 +1447,23 @@ function updateStyleOverride(event) {
 async function applyStartingArtists() {
   if (generating || submitting || referenceBusy || !initialized) return;
   try {
+    const tags = parseArtistInput(elements.startingArtists.value);
+    const previousTags = (state.customStart?.artists || []).map((item) => item.tag);
+    if (tags.join("\n") === previousTags.join("\n")) {
+      elements.startingArtists.value = formatStartingArtists(state.customStart?.artists);
+      return;
+    }
+    if (!tags.length) {
+      const next = { ...state, customArtists: [], customStart: null,
+        parents: state.baseline ? state.parents : [makeInitialGenome(parseStylePrompt(elements.seedStylePrompt.value))] };
+      await setState("active", next);
+      state = next;
+      updateArtistPool();
+      renderCandidates();
+      setStatus("已移除自選畫師起點；現有圖片與偏好紀錄保留。");
+      return;
+    }
     const artists = makeStartingArtists(elements.startingArtists.value);
-    if (!artists.length) throw new Error("請輸入至少一位畫師。");
     const known = new Map(allArtists.map((item) => [item.tag.toLowerCase(), item]));
     const customArtists = artists.map((item) => ({
       ...(known.get(item.tag.toLowerCase()) || { tag: item.tag, postCount: null }),
@@ -1457,25 +1472,17 @@ async function applyStartingArtists() {
     const genome = makeInitialGenome(parseStylePrompt(elements.seedStylePrompt.value));
     genome.id = uid("custom_start");
     genome.artists = artists;
-    state.parents = [genome];
-    state.customArtists = customArtists;
-    state.customStart = structuredClone(genome);
-    state.learning = seedArtistPreferences(state.learning, artists.map((item) => item.tag), 1);
-    state.baseline = null;
-    state.promotedId = null;
-    state.currentBatch = [];
-    state.batchImage2Image = null;
-    state.batchReferences = null;
-    state.selectedIds = [];
-    state.dislikedIds = [];
-    state.batchNumber = 1;
+    const unseededTags = tags.filter((tag) => !state.learning.artists[tag]?.seeded);
+    const next = { ...state, parents: [genome], customArtists, customStart: structuredClone(genome),
+      learning: seedArtistPreferences(state.learning, unseededTags, 1), baseline: null, promotedId: null,
+      currentBatch: [], batchImage2Image: null, batchReferences: null,
+      selectedIds: [], dislikedIds: [], batchNumber: 1 };
+    await setState("active", next);
+    state = next;
     elements.startingArtists.value = formatStartingArtists(artists);
-    saveSettings();
     releaseCandidateUrls();
     updateArtistPool();
-    await persistState();
     renderCandidates();
-    elements.controlsDrawer.close();
     setStatus(`已套用 ${artists.length} 位畫師起點；NAI 權重已重新隨機抽取，每位初始偏好 +1。`);
   } catch (error) {
     setStatus(error.message || "無法套用畫師起點。", true);
@@ -1497,29 +1504,6 @@ async function removeBaseline() {
     renderCandidates();
     setStatus(error.message || "無法刪除目前最佳基準。", true);
   }
-}
-
-async function applySeed() {
-  if (generating || submitting || referenceBusy || !initialized) return;
-  const terms = parseStylePrompt(elements.seedStylePrompt.value);
-  state.parents = [makeInitialGenome(terms)];
-  state.baseline = null;
-  state.promotedId = null;
-  state.currentBatch = [];
-  state.batchImage2Image = null;
-  state.batchReferences = null;
-  state.selectedIds = [];
-  state.dislikedIds = [];
-  state.batchNumber = 1;
-  state.customArtists = [];
-  state.customStart = null;
-  saveSettings();
-  releaseCandidateUrls();
-  updateArtistPool();
-  await persistState();
-  renderCandidates();
-  elements.controlsDrawer.close();
-  setStatus("已套用質量詞並重設畫師起點；既有偏好分數與收藏未清除。 ");
 }
 
 async function resetExploration() {
@@ -1631,10 +1615,9 @@ function bindEvents() {
     elements[name].addEventListener("change", () => { void saveImage2Image({ [field]: Number(elements[name].value) }); });
   }
   elements.seedStylePrompt.addEventListener("input", saveSettings);
-  elements.applySeedButton.addEventListener("click", applySeed);
   elements.customStartButton.addEventListener("click", () => openPanel("start"));
   elements.removeBaselineButton.addEventListener("click", removeBaseline);
-  elements.applyStartingArtistsButton.addEventListener("click", applyStartingArtists);
+  elements.startingArtists.addEventListener("change", () => { void applyStartingArtists(); });
   elements.artistThreshold.addEventListener("change", saveArtistThreshold);
   elements.generateButton.addEventListener("click", generateBatchImages);
   elements.stopButton.addEventListener("click", () => {
