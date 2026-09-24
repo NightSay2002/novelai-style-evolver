@@ -11,7 +11,7 @@ const mean = (values) => values.reduce((sum, value) => sum + value, 0) / values.
 const pairKey = (a, b) => `p:${JSON.stringify([a, b].sort())}`;
 
 export function createLearning() {
-  return { version: LEARNING_VERSION, rounds: 0, models: Array.from({ length: MODEL_COUNT }, () => ({})), artists: {}, pairs: {}, recentEvents: [] };
+  return { version: LEARNING_VERSION, rounds: 0, directRounds: 0, models: Array.from({ length: MODEL_COUNT }, () => ({})), artists: {}, pairs: {}, recentEvents: [] };
 }
 
 export function compatibleLearning(value) {
@@ -88,9 +88,15 @@ function dot(model, features) {
   return Object.entries(features).reduce((sum, [key, value]) => sum + (model[key] || 0) * value, 0);
 }
 
+function directScore(genome, learning) {
+  const artists = artistValues(genome);
+  return artists.reduce((sum, item) => sum + (learning.artists[item.tag]?.feedbackScore || 0), 0) / Math.max(1, artists.length) / 10;
+}
+
 export function predictPreference(genome, learning) {
   const features = preferenceFeatures(genome, learning);
-  const values = learning.models.map((model) => dot(model, features));
+  const direct = directScore(genome, learning);
+  const values = learning.models.map((model) => dot(model, features) + direct);
   const score = mean(values);
   return { score, uncertainty: Math.sqrt(mean(values.map((value) => (value - score) ** 2))), values };
 }
@@ -129,6 +135,12 @@ export function applyPreferenceVote(learning, candidates, selectedIds = [], disl
     for (const item of records) add(baseline, item, 1);
   }
   const useful = comparisons.filter(({ winner, loser }) => Object.keys(difference(winner, loser, next)).length);
+  const rememberWeights = (genome) => {
+    for (const { tag, weight } of artistValues(genome)) {
+      const stat = next.artists[tag] ||= { appearances: 0, comparisons: 0, independent: 0 };
+      if (!stat.observedWeights?.includes(weight)) stat.observedWeights = [...(stat.observedWeights || []), weight].sort((a, b) => a - b);
+    }
+  };
   if (useful.length) {
     next.rounds += 1;
     const seen = new Set();
@@ -138,6 +150,7 @@ export function applyPreferenceVote(learning, candidates, selectedIds = [], disl
     useful.forEach(({ winner, loser }, index) => {
       const diff = difference(winner, loser, next);
       for (const genome of [winner, loser]) {
+        rememberWeights(genome);
         const artists = artistValues(genome);
         for (const item of artists) seen.add(item.tag);
         for (let i = 0; i < artists.length; i += 1) {
@@ -175,8 +188,8 @@ export function applyPreferenceVote(learning, candidates, selectedIds = [], disl
       if (!repetitions) return;
       // Proximal L2 update, shared batch gradient, bounded feature-normalized step.
       const gradient = {};
-      for (const { diff, strength } of training) {
-        const residual = 1 / (1 + Math.exp(clamp(dot(model, diff), -30, 30)));
+      for (const { winner, loser, diff, strength } of training) {
+        const residual = 1 / (1 + Math.exp(clamp(dot(model, diff) + directScore(winner, next) - directScore(loser, next), -30, 30)));
         const norm = Math.max(1, Math.sqrt(Object.values(diff).reduce((sum, value) => sum + value * value, 0)));
         for (const [key, value] of Object.entries(diff)) gradient[key] = (gradient[key] || 0) + residual * value * strength / total / norm;
       }
@@ -189,6 +202,37 @@ export function applyPreferenceVote(learning, candidates, selectedIds = [], disl
     const stale = Object.entries(next.pairs).sort((a, b) => b[1].last - a[1].last).slice(PAIR_LIMIT);
     for (const [key] of stale) { delete next.pairs[key]; for (const model of next.models) delete model[key]; }
   }
+  if (action !== "ignore") {
+    const feedback = new Map();
+    for (const item of records) {
+      if (!selected.has(item.id) && !disliked.has(item.id)) continue;
+      rememberWeights(item.genome);
+      const delta = disliked.has(item.id) ? -3 : deltas.selected;
+      for (const { tag } of artistValues(item.genome)) {
+        const value = feedback.get(tag) || { sum: 0, count: 0, liked: false, disliked: false };
+        value.sum += delta;
+        value.count += 1;
+        value.liked ||= selected.has(item.id);
+        value.disliked ||= disliked.has(item.id);
+        feedback.set(tag, value);
+      }
+    }
+    let updated = false;
+    for (const [tag, value] of feedback) {
+      // Mixed feedback for the same artist is ambiguous; the relative weight
+      // and combination model above can still learn from those cards.
+      if (value.liked && value.disliked) continue;
+      const stat = next.artists[tag];
+      const previous = stat.feedbackScore || 0;
+      const delta = value.sum / value.count;
+      // Repeated agreement has diminishing returns but never stops changing
+      // the rank; opposing feedback can still reverse the trend.
+      stat.feedbackScore = previous + delta / (previous * delta > 0 ? 1 + Math.abs(previous) / 20 : 1);
+      stat.feedbackRounds = (stat.feedbackRounds || 0) + 1;
+      updated = true;
+    }
+    if (updated) next.directRounds = (next.directRounds || 0) + 1;
+  }
   // Exposure is separate from credit, including ignored/fully rejected cold starts.
   for (const tag of new Set(records.flatMap((item) => item.genome.artists.map((artist) => tagKey(artist.tag))))) {
     next.artists[tag] ||= { appearances: 0, comparisons: 0, independent: 0 };
@@ -198,13 +242,23 @@ export function applyPreferenceVote(learning, candidates, selectedIds = [], disl
   return { learning: next, candidateDeltas, comparisonCount: useful.length };
 }
 
-export function preferenceRanking(learning, limit = 20) {
-  return Object.entries(learning.artists).map(([tag, stat]) => ({
-    tag, score: mean(learning.models.map((model) => model[`a:${tag}`] || 0)) * 10,
-    rounds: stat.comparisons, independent: stat.independent,
-    evidence: stat.independent >= 3 ? "有比較依據" : stat.seeded ? "自選起點" : "待確認",
-    seeded: Boolean(stat.seeded)
-  })).filter((item) => item.rounds > 0 || item.seeded).sort((a, b) => b.score - a.score || b.independent - a.independent || a.tag.localeCompare(b.tag)).slice(0, limit);
+export function preferenceRanking(learning, limit = 20, lowest = false) {
+  return Object.entries(learning.artists).map(([tag, stat]) => {
+    const identity = mean(learning.models.map((model) => model[`a:${tag}`] || 0)) * 10 + (stat.feedbackScore || 0);
+    const scores = (stat.observedWeights?.length ? stat.observedWeights : [1]).map((weight) => {
+      const centered = weight - 1;
+      return { weight, score: identity + mean(learning.models.map((model) =>
+        (model[`w:${tag}`] || 0) * centered + (model[`q:${tag}`] || 0) * centered ** 2)) * 10 };
+    }).sort((a, b) => b.score - a.score || a.weight - b.weight);
+    return {
+      tag, score: identity, bestScore: scores[0].score, weight: scores[0].weight,
+      worstScore: scores.at(-1).score, worstWeight: scores.at(-1).weight,
+      rounds: stat.comparisons, independent: stat.independent,
+      evidence: stat.independent >= 3 ? "有比較依據" : stat.feedbackRounds ? "整圖回饋" : stat.seeded ? "自選起點" : "待確認",
+      seeded: Boolean(stat.seeded), feedbackRounds: stat.feedbackRounds || 0
+    };
+  }).filter((item) => item.rounds > 0 || item.seeded || item.feedbackRounds || learning.artists[item.tag].observedWeights?.length)
+    .sort((a, b) => (lowest ? a.score - b.score : b.score - a.score) || b.independent - a.independent || a.tag.localeCompare(b.tag)).slice(0, limit);
 }
 
 export function redistributeWeights(artists, rng = Math.random) {

@@ -44,7 +44,7 @@ test("comparison fingerprint isolates all effective inputs and excludes credenti
   assert.notEqual(await comparisonContext(settings, null, refs), await comparisonContext(settings, null, { ...refs, normalize: false }));
 });
 
-test("pairwise credit cancels common artists; strong dislike and neutral points remain image-level", () => {
+test("pairwise credit cancels common artists while explicit whole-image feedback remains separate", () => {
   const good = card("a", genome(artist("common"), artist("good")));
   const bad = card("b", genome(artist("common"), artist("bad")));
   const neutral = card("c", genome(artist("common"), artist("neutral")));
@@ -55,8 +55,85 @@ test("pairwise credit cancels common artists; strong dislike and neutral points 
   assert.equal(comparisonCount, 2);
   assert(learning.models.every((model) => !model["a:artist:common"]));
   assert.equal(learning.artists["artist:common"].comparisons, 0);
+  assert.equal(learning.artists["artist:common"].feedbackScore, undefined, "mixed feedback must not directly blame a shared artist");
+  assert(learning.artists["artist:good"].feedbackScore > 0);
+  assert.equal(learning.artists["artist:bad"].feedbackScore, -3);
   assert(predictPreference(good.genome, learning).score > predictPreference(bad.genome, learning).score);
   assert(predictPreference(neutral.genome, learning).score > predictPreference(bad.genome, learning).score);
+});
+
+test("explicit likes and dislikes directly change artist rank even without a baseline", () => {
+  const candidates = [card("a", genome(artist("good"))), card("b", genome(artist("bad"))), card("c", genome(artist("untouched")))];
+  const liked = applyPreferenceVote(createLearning(), candidates, ["a"], [], { eventId: "like", rng: random(2) });
+  assert.equal(liked.learning.artists["artist:good"].feedbackScore, liked.candidateDeltas.a);
+  assert.equal(liked.learning.artists["artist:untouched"].feedbackScore, undefined);
+  const disliked = applyPreferenceVote(createLearning(), candidates, [], ["b"], { eventId: "dislike" });
+  assert.equal(disliked.comparisonCount, 0);
+  assert.equal(disliked.learning.rounds, 0);
+  assert.equal(disliked.learning.directRounds, 1);
+  assert.equal(disliked.learning.artists["artist:bad"].feedbackScore, -3);
+  assert.equal(preferenceRanking(disliked.learning)[0].score, -3);
+  assert.equal(preferenceRanking(disliked.learning)[0].evidence, "整圖回饋");
+  assert(predictPreference(candidates[1].genome, disliked.learning).score < 0);
+  const twoBadArtists = applyPreferenceVote(createLearning(), [card("b", genome(artist("bad"))), card("s", genome(artist("second")))], [], ["b", "s"]).learning;
+  assert.equal(predictPreference(genome(artist("bad")), twoBadArtists).score,
+    predictPreference(genome(artist("bad"), artist("second")), twoBadArtists).score,
+    "a larger artist combination must not multiply the same direct dislike signal");
+  assert.deepEqual(applyPreferenceVote(disliked.learning, candidates, [], ["b"], { eventId: "dislike" }).learning, disliked.learning);
+});
+
+test("a rejected batch deducts each artist once, while ignored and unselected cards do not directly score", () => {
+  const candidates = [card("a", genome(artist("shared"))), card("b", genome(artist("shared"))), card("c", genome(artist("other")))];
+  const rejected = applyPreferenceVote(createLearning(), candidates, [], [], { action: "reject" }).learning;
+  assert.equal(rejected.artists["artist:shared"].feedbackScore, -3);
+  assert.equal(rejected.artists["artist:other"].feedbackScore, -3);
+  assert.equal(rejected.artists["artist:shared"].feedbackRounds, 1);
+  assert.equal(rejected.directRounds, 1);
+  const ignored = applyPreferenceVote(createLearning(), candidates, [], [], { action: "ignore" }).learning;
+  assert.equal(ignored.directRounds, 0);
+  assert.equal(preferenceRanking(ignored).length, 0);
+  const onlyOne = applyPreferenceVote(createLearning(), candidates, ["a"], [], { rng: random(2) }).learning;
+  assert.equal(onlyOne.artists["artist:other"].feedbackScore, undefined);
+});
+
+test("existing learning data without direct-feedback fields remains usable", () => {
+  const old = createLearning();
+  delete old.directRounds;
+  old.artists["artist:old"] = { appearances: 1, comparisons: 1, independent: 1 };
+  old.models.forEach((model) => { model["a:artist:old"] = 0.2; });
+  assert.equal(preferenceRanking(old)[0].score, 2);
+  const updated = applyPreferenceVote(old, [card("bad", genome(artist("old")))], [], ["bad"]).learning;
+  assert.equal(updated.directRounds, 1);
+  assert.equal(updated.artists["artist:old"].feedbackScore, -3);
+  assert.equal(preferenceRanking(updated)[0].score, -1);
+});
+
+test("repeated dislikes keep lowering artist rank and a later like raises it", () => {
+  const bad = card("bad", genome(artist("repeat")));
+  let learning = createLearning();
+  for (let round = 0; round < 12; round += 1) {
+    const previous = learning.artists["artist:repeat"]?.feedbackScore || 0;
+    learning = applyPreferenceVote(learning, [bad], [], ["bad"], { eventId: `dislike-${round}` }).learning;
+    assert(learning.artists["artist:repeat"].feedbackScore < previous);
+  }
+  const previous = preferenceRanking(learning)[0].score;
+  learning = applyPreferenceVote(learning, [bad], ["bad"], [], { eventId: "later-like" }).learning;
+  assert(preferenceRanking(learning)[0].score > previous);
+});
+
+test("ranking exposes observed weight preference and both highest and lowest scores", () => {
+  const low = card("low", genome(artist("same", 0.2)));
+  const high = card("high", genome(artist("same", 1.8)));
+  const learned = applyPreferenceVote(createLearning(), [low, high], ["low"], ["high"], { rng: random(2) }).learning;
+  const ranking = preferenceRanking(learned)[0];
+  assert.equal(ranking.tag, "artist:same");
+  assert.equal(ranking.weight, 0.2);
+  assert.equal(ranking.worstWeight, 1.8);
+  assert(ranking.bestScore > ranking.worstScore);
+  assert.equal(preferenceRanking(learned, 20, true)[0].tag, "artist:same");
+  const afterDislike = applyPreferenceVote(learned, [high], [], ["high"]).learning;
+  assert.equal(preferenceRanking(afterDislike)[0].score, ranking.score - 3,
+    "explicit dislike must lower the displayed artist score even if another tested weight stays preferable");
 });
 
 test("multi-likes are unordered; no implicit comparisons for ignore, cross-context or all liked", () => {
@@ -128,7 +205,7 @@ test("pair corrections require three different rounds and co-moving artists stay
     learning = applyPreferenceVote(learning, [a, b], ["a"], ["b"], { rng }).learning;
     assert.equal(Object.keys(preferenceFeatures(a.genome, learning)).some((key) => key.startsWith("p:")), round >= 3);
   }
-  assert(preferenceRanking(learning).every((item) => item.evidence === "待確認"));
+  assert(preferenceRanking(learning).every((item) => item.independent === 0 && item.evidence !== "有比較依據"));
   assert(learning.models.every((model) => Object.values(model).every(Number.isFinite)));
 });
 

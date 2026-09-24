@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>NovelAI 畫風演化器</title>
-    <link rel="stylesheet" href="./styles.css?v=25" />
+    <link rel="stylesheet" href="./styles.css?v=26" />
   </head>
   <body>
     <svg class="icon-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -161,8 +161,9 @@ procrastinator39"></textarea>
         </section>
         <section data-panel-body="ranking" hidden>
           <p id="rankingHint" class="hint" role="status"></p>
-          <div class="ranking-scroll"><table class="ranking-table"><thead><tr><th scope="col">排名</th><th scope="col">畫師</th><th scope="col">偏好分</th><th scope="col">比較輪數</th><th scope="col">依據</th></tr></thead><tbody id="rankingBody"></tbody></table></div>
-          <p class="hint">全域共用排名；只用同生成設定的圖片建立比較。數字權重 1.0 的個別偏好分僅供參考，搭配與權重仍會影響結果。共同出現但未被區分的畫師標為待確認。</p>
+          <label for="rankingOrder">排序<select id="rankingOrder"><option value="high">最高分</option><option value="low">最低分</option></select></label>
+          <div class="ranking-scroll"><table class="ranking-table"><thead><tr><th scope="col">序</th><th scope="col">畫師與已試權重</th><th scope="col">畫師分</th><th scope="col">比較輪數</th><th scope="col">依據</th></tr></thead><tbody id="rankingBody"></tbody></table></div>
+          <p class="hint">讚好／不喜歡直接影響圖中畫師，整批同一畫師只記一次；共同出現的畫師可能同受影響。畫師分以權重 1.0 比較；已試權重估計另列於名稱下，搭配仍會改變實際結果。</p>
         </section>
       </div>
       <div class="drawer-footer"><span>設定保存在目前瀏覽器</span><button type="button" class="secondary" data-close-drawer>回到卡桌 <svg><use href="#i-arrow"/></svg></button></div>
@@ -183,6 +184,6 @@ procrastinator39"></textarea>
       <div class="preview-actions"><button id="previewFavorite" type="button" class="favorite-button secondary" aria-label="收藏目前圖片" aria-pressed="false" hidden disabled><svg><use href="#i-star"/></svg><span>收藏</span></button></div>
       <details class="preview-details"><summary>完整 Prompt 與 Negative Prompt</summary><pre id="dialogPrompt"></pre></details>
     </dialog>
-    <script type="module" src="./app.js?v=37"></script>
+    <script type="module" src="./app.js?v=38"></script>
   </body>
 </html>

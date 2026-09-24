@@ -592,7 +592,11 @@
           && candidate.genome.artists.length <= Math.min(6, parent.artists.length + 1);
       }), '三張偏好延伸都有變動，未滿六位可新增，不縮減基準組合');
       click('[data-panel="ranking"]');
-      assert($('#drawerTitle').textContent === '目前畫師排名' && $('#rankingBody').children.length > 0 && !$('#rankingHint').textContent.includes('%'), '左側排名抽屜顯示比較依據，不假裝是勝率');
+      assert($('#drawerTitle').textContent === '目前畫師排名' && $('#rankingBody').children.length > 0 && !$('#rankingHint').textContent.includes('%')
+        && $('#rankingBody .ranking-weights'), '左側排名顯示已試權重與比較依據，不假裝是勝率');
+      $('#rankingOrder').value = 'low';
+      $('#rankingOrder').dispatchEvent(new Event('change', { bubbles: true }));
+      assert($('#rankingBody').children.length > 0 && $('#rankingOrder').value === 'low', '排名可切換查看低分畫師');
       click('#controlsDrawer [data-close-drawer]');
       const likedDeltas = data.state.votes[0].selectedIds.map(id => data.state.votes[0].candidateDeltas[id]);
       assert(likedDeltas.length === 2 && likedDeltas.every(delta => delta === 1.5), '讚好與邊框選取按相同規則計分一次');
@@ -1272,6 +1276,7 @@
         currentBatch: [], batchImage2Image: null, batchReferences: null, selectedIds: [], dislikedIds: [], promotedId: null };
       const strandedModels = JSON.stringify(data.state.learning.models);
       const strandedRounds = data.state.learning.rounds;
+      const strandedDirectRounds = data.state.learning.directRounds || 0;
       await reloadReferenceFrame();
       assert(!data.state.baseline && !data.state.parents[0].artists.length && strandedRounds > 0
         && ref$('#baselineHint').textContent.includes('尚未建立圖片基準'), '已有學習但沒有起點的舊進度保留分數，提示尚未建立圖片基準');
@@ -1289,8 +1294,10 @@
       refClick('#dislikeAllButton');
       await until(() => data.pending, 'cold-start reject submitted');
       assert(!data.state.baseline && data.state.votes.at(-1).comparisonCount === 0
-        && data.state.learning.rounds === strandedRounds && JSON.stringify(data.state.learning.models) === strandedModels,
-        '沒有基準時全不喜歡不選爛圖作起點，已有學習不重設');
+        && data.state.learning.rounds === strandedRounds && JSON.stringify(data.state.learning.models) === strandedModels
+        && data.state.learning.directRounds === strandedDirectRounds + 1
+        && data.state.currentBatch.length === 5,
+        '沒有基準時全不喜歡不選爛圖作起點，但直接降低畫師偏好分');
       for (let i = 0; i < 5; i++) await answer();
       await until(() => !ref$('#ignoreBatchButton').disabled, 'automatic first baseline ready');
       const automaticBaseline = structuredClone(data.state.currentBatch[2]);

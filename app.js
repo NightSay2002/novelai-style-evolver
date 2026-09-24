@@ -6,7 +6,7 @@ import {
   serializeGenome,
   splitPromptTokens
 } from "./src/evolution.js?v=13";
-import { applyPreferenceVote, CANDIDATE_ROLES, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceRanking, sameContext, seedArtistPreferences } from "./src/preference.js?v=4";
+import { applyPreferenceVote, CANDIDATE_ROLES, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceRanking, sameContext, seedArtistPreferences } from "./src/preference.js?v=5";
 import { classifyStylePool, STYLE_LAYERS } from "./src/style-taxonomy.js?v=1";
 import { availableNoiseSchedules, availableSamplers, buildNovelAiPayload, DEFAULT_GENERATION_SETTINGS, encodeNovelAiVibe, estimateNovelAiCost, fetchNovelAiAnlas, FIXED_SETTINGS, generateNovelAiImage, modelCapabilities, MODELS, NOISE_SCHEDULES, normalizeGenerationSettings, normalizeImageDimensions, SAMPLERS } from "./src/nai.js?v=10";
 import { injectCandidateMetadata } from "./src/png-metadata.js?v=6";
@@ -49,7 +49,7 @@ const elements = Object.fromEntries([
   "generationNoiseSchedule", "generationVarietyPlus", "generationDecrisp", "generationSmea", "generationSmeaDyn", "generationAutoSmea", "generationLegacyUc",
   "vibePanel", "precisePanel",
   "stylePoolList", "batchTitle", "progressText", "batchProgress", "candidateGrid", "baselinePreview", "baselineImage", "baselineHint", "customStartButton", "removeBaselineButton",
-  "startingArtists", "artistThreshold", "artistThresholdStatus", "rankingBody", "rankingHint",
+  "startingArtists", "artistThreshold", "artistThresholdStatus", "rankingBody", "rankingHint", "rankingOrder",
   "selectionSummary", "generationCost", "nextBatchCost", "stopButton", "ignoreBatchButton", "dislikeAllButton", "submitVoteButton", "generateButton",
   "resetButton", "libraryGrid", "imageDialog", "closeDialogButton", "dialogImage", "dialogPrompt", "previewPrevious", "previewNext", "previewPosition", "previewFavorite",
   "controlsDrawer", "drawerTitle", "libraryDrawer", "libraryTitle", "reduceMotion", "backgroundMusic", "musicButton", "musicVolume"
@@ -762,7 +762,7 @@ function makeCard(candidate, index, animate) {
         <button type="button" class="retry-button" data-action="retry" hidden>重試</button>
         <button type="button" class="retry-button" data-action="image-retry" hidden>重載圖片</button>
         <button type="button" class="icon-button like-button" data-action="like" title="讚好 · 與點邊框選取相同" aria-label="讚好候選 ${index + 1}" aria-pressed="false" disabled>${icon("like")}</button>
-        <button type="button" class="icon-button dislike-button" data-action="dislike" title="不喜歡 · −3；有讚好時建立較強比較" aria-label="不喜歡候選 ${index + 1}" aria-pressed="false" disabled>${icon("dislike")}</button>
+        <button type="button" class="icon-button dislike-button" data-action="dislike" title="不喜歡 · 本圖 −3，提交後降低畫師偏好" aria-label="不喜歡候選 ${index + 1}" aria-pressed="false" disabled>${icon("dislike")}</button>
         <button type="button" class="icon-button favorite-button" data-action="favorite" title="收藏 · 保存儲存點，不影響評分" aria-label="收藏候選 ${index + 1}" aria-pressed="false" disabled>${icon("star")}</button>
         <button type="button" class="icon-button" data-action="download" title="下載" aria-label="下載候選 ${index + 1}" disabled>${icon("download")}</button>
       </div>
@@ -844,7 +844,7 @@ function renderCandidates({ animate = false } = {}) {
     const dislikeButton = card.querySelector('[data-action="dislike"]');
     dislikeButton.setAttribute("aria-pressed", String(disliked.has(candidate.id)));
     dislikeButton.setAttribute("aria-label", `${disliked.has(candidate.id) ? "取消不喜歡" : "不喜歡"}候選 ${index + 1}`);
-    dislikeButton.title = disliked.has(candidate.id) ? "取消不喜歡" : "不喜歡 · −3；有讚好時建立較強比較";
+    dislikeButton.title = disliked.has(candidate.id) ? "取消不喜歡" : "不喜歡 · 本圖 −3，提交後降低畫師偏好";
     dislikeButton.disabled = !success || generating || submitting;
     for (const action of ["favorite", "download", "preview", "details"]) {
       card.querySelector(`[data-action="${action}"]`).disabled = !success || submitting;
@@ -890,10 +890,14 @@ function renderBaseline() {
 }
 
 function renderRanking() {
-  const ranking = preferenceRanking(state.learning);
-  elements.rankingHint.textContent = ranking.length ? `已學習 ${state.learning.rounds} 輪有效比較。分數為相對偏好，不是勝率；待確認的畫師尚未被充分區分。`
-    : "尚無可排名的比較。先讚好、比較基準，再提交；忽略不會產生勝負。";
-  elements.rankingBody.innerHTML = ranking.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.tag.replace(/^artist:/u, ""))}</td><td>${item.score.toFixed(1)}</td><td>${item.rounds}</td><td>${item.evidence}</td></tr>`).join("");
+  const ranking = preferenceRanking(state.learning, 20, elements.rankingOrder.value === "low");
+  elements.rankingHint.textContent = ranking.length ? `已記錄 ${state.learning.directRounds || 0} 批直接回饋、${state.learning.rounds} 輪有效比較。分數不是勝率；「整圖回饋」仍無法分辨共同畫師。`
+    : "尚無畫師回饋。讚好或不喜歡並提交後才會計分；忽略不計入學習。";
+  elements.rankingBody.innerHTML = ranking.map((item, index) => {
+    const weightNote = item.weight === item.worstWeight ? `已試 ${item.weight.toFixed(1)}：${item.bestScore.toFixed(2)}`
+      : `較佳 ${item.weight.toFixed(1)}：${item.bestScore.toFixed(2)} · 較差 ${item.worstWeight.toFixed(1)}：${item.worstScore.toFixed(2)}`;
+    return `<tr><td>${index + 1}</td><td>${escapeHtml(item.tag.replace(/^artist:/u, ""))}<small class="ranking-weights">${weightNote}</small></td><td>${item.score.toFixed(2)}</td><td>${item.rounds}</td><td>${item.evidence}</td></tr>`;
+  }).join("");
 }
 
 function updateControls() {
@@ -918,7 +922,7 @@ function updateControls() {
   elements.dislikeAllButton.hidden = !completed;
   const comparable = sameContext(state.baseline, state.currentBatch[0]);
   elements.dislikeAllButton.textContent = comparable ? "全部不喜歡 · 都不如基準" : "全部不喜歡";
-  elements.dislikeAllButton.title = comparable ? "五張各 −3；學習目前最佳勝過本批五張，保留起點" : "五張各 −3；沒有同設定基準，不捏造勝負，保留起點";
+  elements.dislikeAllButton.title = comparable ? "五張各 −3；直接降低畫師偏好，並學習目前最佳勝過本批" : "五張各 −3；直接降低畫師偏好，沒有基準則不捏造勝負";
   elements.ignoreBatchButton.disabled = !completed || busy || !generationSettingsValid;
   elements.ignoreBatchButton.hidden = !completed;
   elements.stopButton.disabled = !generating || abortController?.signal.aborted;
@@ -1650,6 +1654,7 @@ function bindEvents() {
   elements.candidateGrid.addEventListener("click", handleCandidateAction);
   elements.styleSearch.addEventListener("input", renderStylePool);
   elements.styleLayerFilter.addEventListener("change", renderStylePool);
+  elements.rankingOrder.addEventListener("change", renderRanking);
   elements.stylePoolList.addEventListener("change", updateStyleOverride);
   document.querySelectorAll("[data-library]").forEach((button) => {
     button.addEventListener("click", () => openLibrary(button.dataset.library));
