@@ -3,7 +3,8 @@ import {
   makeStartingArtists,
   parseArtistInput,
   parseStylePrompt,
-  serializeGenome
+  serializeGenome,
+  splitPromptTokens
 } from "./src/evolution.js?v=13";
 import { applyPreferenceVote, CANDIDATE_ROLES, comparisonContext, compatibleLearning, createLearning, generatePreferenceBatch, preferenceRanking, sameContext, seedArtistPreferences } from "./src/preference.js?v=4";
 import { classifyStylePool, STYLE_LAYERS } from "./src/style-taxonomy.js?v=1";
@@ -625,9 +626,25 @@ function candidateRecord(genome, index, settings, reference, references, savePoi
   const id = uid("candidate");
   const batchId = `batch_${state.batchNumber}`;
   const capabilities = modelCapabilities(settings.generationSettings.model);
-  const prompt = serializeGenome(genome, settings.contentPrompt, capabilities);
-  const negativePrompt = capabilities.negativeNumerical ? settings.negativePrompt
-    : serializeGenome(genome, settings.negativePrompt, { ...capabilities, negative: true });
+  let prompt;
+  let negativePrompt;
+  if (!capabilities.numerical) {
+    prompt = serializeGenome(genome, settings.contentPrompt, capabilities);
+    negativePrompt = serializeGenome(genome, settings.negativePrompt, { ...capabilities, negative: true });
+  } else {
+    const positiveQuality = [];
+    const negativeQuality = [];
+    for (const token of splitPromptTokens(settings.seedStylePrompt)) {
+      if (!capabilities.negativeNumerical && parseStylePrompt(token)[0]?.polarity === "negative") negativeQuality.push(token);
+      else positiveQuality.push(token);
+    }
+    const rawQuality = capabilities.negativeNumerical ? settings.seedStylePrompt : positiveQuality.join(",\n");
+    prompt = [serializeGenome({ ...genome, styleTerms: [] }, settings.contentPrompt, capabilities), rawQuality]
+      .filter(Boolean).join(",\n");
+    negativePrompt = capabilities.negativeNumerical ? settings.negativePrompt
+      : serializeGenome({ artists: [], styleTerms: parseStylePrompt(negativeQuality.join(",")) },
+        settings.negativePrompt, { ...capabilities, negative: true });
+  }
   const request = buildNovelAiPayload(prompt, negativePrompt, reference, settings.generationSettings, references);
   // Keep the reference once in batch state, not in every history record or downloaded PNG.
   delete request.parameters.image;

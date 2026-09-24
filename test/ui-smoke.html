@@ -285,6 +285,10 @@
       click('#generateButton');
       click('#generateButton');
       await until(() => data.pending, 'first request');
+      assert(data.requests[0].prompt.endsWith(originalQualityPrompt.trim())
+        && data.requests[0].prompt.includes('{{{detail background}}}')
+        && !data.requests[0].prompt.includes('1::best quality::'),
+        'V5 實際生成 Prompt 保留質量詞原文，不補 1:: 或改寫大括號');
       const firstCard = $('.candidate');
       assert($('#resetButton').disabled && $('#startingArtists').disabled, '生成中禁止重設與更換畫師起點');
       assert($('#generationCost').hidden && $('#nextBatchCost').hidden, '生成中隱藏原按鈕時，外部費用同步隱藏');
@@ -569,6 +573,8 @@
       const nextQuality = parseStylePrompt($('#seedStylePrompt').value);
       assert(nextQuality.length === 3 && data.state.currentBatch.every(item => JSON.stringify(item.genome.styleTerms) === JSON.stringify(nextQuality)),
         '新批次五張採用修改後三個質量詞，交叉重組也不混入父基因風格');
+      assert(data.state.currentBatch.every(item => item.prompt.endsWith($('#seedStylePrompt').value.trim())),
+        '新批次五張實際 Prompt 沿用修改後的質量詞原文');
       data.saveDelay = 0;
       batchObserver.disconnect();
       assert(!insertedCards.some(card => card.id.startsWith('empty-')), '換批不先顯示終點佔位牌再跳回發牌起點');
@@ -1039,6 +1045,8 @@
       refClick('#submitVoteButton');
       await until(() => data.pending, 'full checkpoint request');
       const checkpointRequest = structuredClone(data.requests.at(-1));
+      assert(checkpointRequest.prompt.endsWith('watercolor (medium), best quality')
+        && !checkpointRequest.prompt.includes('1::best quality::'), 'V4.5 生成同樣不替普通質量詞補 1::');
       const pointId = data.state.currentBatch[0].savePointId;
       const checkpoint = structuredClone(data.savepoints.get(pointId));
       assert(checkpoint.learning.rounds > 0 && checkpoint.baseline.blob instanceof Blob && checkpoint.image2Image.originalBlob instanceof Blob && checkpoint.referenceTools.vibes.images.length === 1 && checkpoint.referenceTools.precise.images.length === 1, '完整儲存點包含新版學習、基準、Image2Image 原圖及全部參考工具');
